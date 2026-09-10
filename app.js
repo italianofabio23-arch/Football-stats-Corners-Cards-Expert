@@ -254,7 +254,7 @@ function renderXgBox(label, value) {
     </div>
   `;
 }
-function getExpertPrediction(probabilities) {
+function getExpertPrediction(probabilities, match = null) {
   if (!probabilities) {
     return {
       label: "Nessun pronostico",
@@ -285,10 +285,16 @@ if (Number(best.value) < 65) {
 }
 
 if (Number(best.value) >= 80) {
-  return {
-    label: `🔥 TOP • ${best.label}`,
-    value: best.value
-  };
+  const topConfidence = match
+    ? calculateConfidenceScore(match, { value: best.value })
+    : 0;
+
+  if (topConfidence >= 80) {
+    return {
+      label: `🔥 TOP • ${best.label}`,
+      value: best.value
+    };
+  }
 }
 
 if (Number(best.value) >= 70) {
@@ -385,7 +391,7 @@ function renderMatchCard(match) {
 
   const mainProbability = getMainProbability(match);
   const mainLabel = getStrategyLabel();
-const expertPrediction = getExpertPrediction(probabilities);
+  const expertPrediction = getExpertPrediction(probabilities, match);
   const confidenceScore = calculateConfidenceScore(match, expertPrediction);
   return `
     <article class="match-card">
@@ -516,9 +522,9 @@ function renderTop80Slip(matches) {
   const picks = matches
     .map((match) => ({
       match,
-      prediction: getExpertPrediction(match.probabilities || {})
+      prediction: getExpertPrediction(match.probabilities, match)
     }))
-    .filter((item) => Number(item.prediction.value) >= 80)
+    .filter((item) => item.prediction.label.startsWith("🔥 TOP"))
     .sort(
       (a, b) =>
         Number(b.prediction.value) -
