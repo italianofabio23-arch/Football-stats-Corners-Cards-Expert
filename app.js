@@ -442,6 +442,7 @@ ${renderMarketBox("✈️ 2 Ospite", probabilities.awayWin)}
 
 ${mainLabel !== "Under 2.5"
   ? renderMarketBox("Under 2.5", probabilities.under25)
+    : ""}
       </div>
 
     </article>
