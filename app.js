@@ -1370,10 +1370,11 @@ const leagueAverage =
 
 
   return {
-    homeExpectedGoals,
-    awayExpectedGoals,
-    homeForm,
-    awayForm,
-    leagueAverage
-  };
-      }
+  homeExpectedGoals,
+  awayExpectedGoals,
+  homeForm,
+  awayForm,
+  leagueAverage,
+  homePlayed,
+  awayPlayed
+};
