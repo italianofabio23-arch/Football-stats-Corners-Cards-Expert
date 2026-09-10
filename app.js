@@ -432,8 +432,6 @@ ${mainLabel !== "Over 2.5"
   ? renderMarketBox("Over 2.5", probabilities.over25)
   : ""}
 
-
-  : ""}
 ${renderXgBox("xG Casa", match.xg?.home)}
 ${renderXgBox("xG Ospite", match.xg?.away)}
 ${renderMarketBox("🏠 1 Casa", probabilities.homeWin)}
