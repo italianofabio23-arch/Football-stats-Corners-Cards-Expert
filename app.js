@@ -1461,3 +1461,4 @@ const leagueAverage =
   homePlayed,
   awayPlayed
 };
+}
