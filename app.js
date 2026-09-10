@@ -303,6 +303,78 @@ return {
   value: best.value
 };
 }
+// ========================================
+// V6 - CONFIDENCE SCORE 0-100
+// ========================================
+function calculateConfidenceScore(match, expertPrediction) {
+  const probability = Number(expertPrediction?.value);
+
+  if (!Number.isFinite(probability)) {
+    return 0;
+  }
+
+  const data = match?.expertData || {};
+
+  const homePlayed = Number(data.homePlayed) || 0;
+  const awayPlayed = Number(data.awayPlayed) || 0;
+
+  // Usa il campione più debole tra casa e trasferta
+  const minPlayed = Math.min(homePlayed, awayPlayed);
+
+  // Qualità campione:
+  // poche partite = fiducia ridotta
+  // da circa 8 partite in poi = campione forte
+  const sampleScore = Math.min(
+    100,
+    40 + minPlayed * 7.5
+  );
+
+  const homeXg = Number(match?.xg?.home);
+  const awayXg = Number(match?.xg?.away);
+
+  let xgReliability = 100;
+
+  if (
+    !Number.isFinite(homeXg) ||
+    !Number.isFinite(awayXg)
+  ) {
+    xgReliability = 40;
+  } else {
+    // Penalizza valori arrivati quasi ai limiti
+    // di sicurezza del modello
+    if (
+      homeXg <= 0.16 ||
+      awayXg <= 0.16 ||
+      homeXg >= 4.49 ||
+      awayXg >= 4.49
+    ) {
+      xgReliability -= 25;
+    }
+  }
+
+  const leagueAverage = Number(data.leagueAverage);
+
+  const leagueScore =
+    Number.isFinite(leagueAverage) &&
+    leagueAverage > 0
+      ? 100
+      : 50;
+
+  // Probabilità pronostico = 55%
+  // Quantità dati = 30%
+  // Affidabilità xG = 10%
+  // Dati campionato = 5%
+  const confidence =
+    probability * 0.55 +
+    sampleScore * 0.30 +
+    xgReliability * 0.10 +
+    leagueScore * 0.05;
+
+  return Math.max(
+    0,
+    Math.min(100, Math.round(confidence))
+  );
+}
 function renderMatchCard(match) {
   const home = escapeHtml(match.home || "Casa");
   const away = escapeHtml(match.away || "Ospite");
@@ -314,6 +386,7 @@ function renderMatchCard(match) {
   const mainProbability = getMainProbability(match);
   const mainLabel = getStrategyLabel();
 const expertPrediction = getExpertPrediction(probabilities);
+  const confidenceScore = calculateConfidenceScore(match, expertPrediction);
   return `
     <article class="match-card">
 
@@ -335,6 +408,10 @@ const expertPrediction = getExpertPrediction(probabilities);
 ${renderMarketBox(
   `🔥 Pronostico Expert: ${expertPrediction.label}`,
   expertPrediction.value
+)}
+${renderMarketBox(
+  "🎯 Confidence Score",
+  confidenceScore
 )}
         ${renderMarketBox(
           mainLabel,
