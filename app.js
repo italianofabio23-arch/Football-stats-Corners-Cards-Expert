@@ -1058,6 +1058,151 @@ async function fetchRecentTeamFixtures(teamId, last = 6) {
 
   return fixtures;
 }
+function averageValues(values) {
+  const valid = values.filter((value) =>
+    Number.isFinite(Number(value))
+  );
+
+  if (!valid.length) {
+    return 0;
+  }
+
+  return (
+    valid.reduce(
+      (sum, value) => sum + Number(value),
+      0
+    ) / valid.length
+  );
+}
+
+async function buildTeamCornerCardProfile(
+  teamId,
+  fixtures
+) {
+  const id = Number(teamId);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return null;
+  }
+
+  const matches = Array.isArray(fixtures)
+    ? fixtures
+    : [];
+
+  const samples = [];
+
+  for (const game of matches) {
+    const fixtureId = Number(game?.fixture?.id);
+    const homeId = Number(game?.teams?.home?.id);
+    const awayId = Number(game?.teams?.away?.id);
+
+    if (
+      !Number.isFinite(fixtureId) ||
+      (homeId !== id && awayId !== id)
+    ) {
+      continue;
+    }
+
+    try {
+      const statistics =
+        await fetchFixtureStatistics(fixtureId);
+
+      if (
+        !Array.isArray(statistics) ||
+        statistics.length < 2
+      ) {
+        continue;
+      }
+
+      const parsed =
+        parseCornerCardStatistics(
+          statistics,
+          homeId,
+          awayId
+        );
+
+      const isHome = homeId === id;
+
+      const own = isHome
+        ? parsed.home
+        : parsed.away;
+
+      const opponent = isHome
+        ? parsed.away
+        : parsed.home;
+
+      samples.push({
+        cornersFor: own.corners,
+        cornersAgainst: opponent.corners,
+
+        yellowFor: own.yellowCards,
+        yellowAgainst: opponent.yellowCards,
+
+        redFor: own.redCards,
+        redAgainst: opponent.redCards,
+
+        redInMatch:
+          parsed.total.redCards > 0 ? 1 : 0
+      });
+    } catch (error) {
+      console.warn(
+        "Statistiche storiche non disponibili:",
+        fixtureId
+      );
+    }
+  }
+
+  if (!samples.length) {
+    return null;
+  }
+
+  const round1 = (value) =>
+    Number(value.toFixed(1));
+
+  return {
+    sampleSize: samples.length,
+
+    cornersFor: round1(
+      averageValues(
+        samples.map((item) => item.cornersFor)
+      )
+    ),
+
+    cornersAgainst: round1(
+      averageValues(
+        samples.map((item) => item.cornersAgainst)
+      )
+    ),
+
+    yellowFor: round1(
+      averageValues(
+        samples.map((item) => item.yellowFor)
+      )
+    ),
+
+    yellowAgainst: round1(
+      averageValues(
+        samples.map((item) => item.yellowAgainst)
+      )
+    ),
+
+    redForRate: Math.round(
+      averageValues(
+        samples.map((item) =>
+          item.redFor > 0 ? 100 : 0
+        )
+      )
+    ),
+
+    redMatchRate: Math.round(
+      averageValues(
+        samples.map((item) =>
+          item.redInMatch ? 100 : 0
+        )
+      )
+    )
+  };
+}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
