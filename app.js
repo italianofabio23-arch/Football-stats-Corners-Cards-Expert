@@ -567,8 +567,6 @@ matches = await Promise.all(
     `${matches.length} risultati`;
 
   resultsContainer.innerHTML =
-  renderTop80Slip(matches) +
-  renderRiskyExpertSlip(matches) +
   matches.map(renderMatchCard).join("");
     }
 function renderTop80Slip(matches) {
