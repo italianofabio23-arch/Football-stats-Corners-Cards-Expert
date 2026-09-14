@@ -84,6 +84,28 @@ function safeNumber(value) {
   return Number.isFinite(number) ? number : 0;
                           }
 // ==========================================
+// CORNERS & CARDS - MODELLO CONTEGGI
+// ==========================================
+
+// Probabilità che un conteggio superi una linea:
+// esempio media 9.4 corner + linea 8.5 -> P(9 o più)
+function poissonOverPercent(mean, line) {
+  const lambda = Math.max(0.05, safeNumber(mean));
+  const minimum = Math.floor(safeNumber(line)) + 1;
+
+  let term = Math.exp(-lambda);
+  let cumulative = term;
+
+  for (let k = 1; k < minimum; k++) {
+    term *= lambda / k;
+    cumulative += term;
+  }
+
+  return clampPercent(
+    (1 - cumulative) * 100
+  );
+}
+// ==========================================
 // BLOCCO 2 - Utility e gestione interfaccia
 // ==========================================
 
