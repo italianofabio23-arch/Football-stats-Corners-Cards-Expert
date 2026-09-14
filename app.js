@@ -893,7 +893,132 @@ async function fetchFixturesByDate(date) {
   ? data.response
   : [];
 }
+// Cache statistiche partita: evita richieste duplicate
+const fixtureStatsCache = new Map();
 
+// Recupera statistiche reali di una partita:
+// corner, cartellini gialli, rossi, tiri, ecc.
+async function fetchFixtureStatistics(fixtureId) {
+  const id = Number(fixtureId);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return [];
+  }
+
+  if (fixtureStatsCache.has(id)) {
+    return fixtureStatsCache.get(id);
+  }
+
+  const url =
+    `${BACKEND}/api/football?path=/fixtures/statistics&fixture=${id}`;
+
+  const response = await fetch(url, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Errore statistiche fixture ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  const statistics = Array.isArray(data.response)
+    ? data.response
+    : [];
+
+  fixtureStatsCache.set(id, statistics);
+
+  return statistics;
+}
+// Legge un singolo valore dalle statistiche API-Football
+function getFixtureStat(teamStats, type) {
+  const stats = Array.isArray(teamStats?.statistics)
+    ? teamStats.statistics
+    : [];
+
+  const item = stats.find(
+    (stat) =>
+      String(stat?.type || "").toLowerCase() ===
+      String(type).toLowerCase()
+  );
+
+  return safeNumber(item?.value);
+}
+
+// Estrae corner, gialli e rossi per casa e trasferta
+function parseCornerCardStatistics(
+  statistics,
+  homeTeamId,
+  awayTeamId
+) {
+  const rows = Array.isArray(statistics)
+    ? statistics
+    : [];
+
+  const home =
+    rows.find(
+      (row) =>
+        Number(row?.team?.id) === Number(homeTeamId)
+    ) || rows[0];
+
+  const away =
+    rows.find(
+      (row) =>
+        Number(row?.team?.id) === Number(awayTeamId)
+    ) || rows[1];
+
+  const homeCorners = getFixtureStat(
+    home,
+    "Corner Kicks"
+  );
+
+  const awayCorners = getFixtureStat(
+    away,
+    "Corner Kicks"
+  );
+
+  const homeYellow = getFixtureStat(
+    home,
+    "Yellow Cards"
+  );
+
+  const awayYellow = getFixtureStat(
+    away,
+    "Yellow Cards"
+  );
+
+  const homeRed = getFixtureStat(
+    home,
+    "Red Cards"
+  );
+
+  const awayRed = getFixtureStat(
+    away,
+    "Red Cards"
+  );
+
+  return {
+    home: {
+      corners: homeCorners,
+      yellowCards: homeYellow,
+      redCards: homeRed
+    },
+
+    away: {
+      corners: awayCorners,
+      yellowCards: awayYellow,
+      redCards: awayRed
+    },
+
+    total: {
+      corners: homeCorners + awayCorners,
+      yellowCards: homeYellow + awayYellow,
+      redCards: homeRed + awayRed
+    }
+  };
+}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
