@@ -1297,6 +1297,74 @@ function buildMatchCornerCardPrediction(
     }
   };
 }
+async function enrichMatchWithCornerCardData(match) {
+  try {
+    const sourceGame = match.raw || match;
+
+    const homeTeamId = Number(
+      sourceGame?.teams?.home?.id
+    );
+
+    const awayTeamId = Number(
+      sourceGame?.teams?.away?.id
+    );
+
+    if (
+      !Number.isFinite(homeTeamId) ||
+      !Number.isFinite(awayTeamId)
+    ) {
+      return match;
+    }
+
+    const [homeFixtures, awayFixtures] =
+      await Promise.all([
+        fetchRecentTeamFixtures(homeTeamId, 6),
+        fetchRecentTeamFixtures(awayTeamId, 6)
+      ]);
+
+    const [homeProfile, awayProfile] =
+      await Promise.all([
+        buildTeamCornerCardProfile(
+          homeTeamId,
+          homeFixtures
+        ),
+
+        buildTeamCornerCardProfile(
+          awayTeamId,
+          awayFixtures
+        )
+      ]);
+
+    const cornerCardPrediction =
+      buildMatchCornerCardPrediction(
+        homeProfile,
+        awayProfile
+      );
+
+    return {
+      ...match,
+
+      cornerCardPrediction,
+
+      cornerCardProfiles: {
+        home: homeProfile,
+        away: awayProfile
+      }
+    };
+  } catch (error) {
+    console.warn(
+      "Errore analisi Corner/Card:",
+      match?.home,
+      match?.away,
+      error
+    );
+
+    return {
+      ...match,
+      cornerCardPrediction: null
+    };
+  }
+}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
