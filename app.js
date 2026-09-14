@@ -1203,6 +1203,100 @@ async function buildTeamCornerCardProfile(
     )
   };
 }
+function buildMatchCornerCardPrediction(
+  homeProfile,
+  awayProfile
+) {
+  if (!homeProfile || !awayProfile) {
+    return null;
+  }
+
+  const round1 = (value) =>
+    Number(safeNumber(value).toFixed(1));
+
+  // Corner previsti casa:
+  // media tra corner fatti dalla casa
+  // e corner concessi dall'ospite
+  const homeCorners = round1(
+    averageValues([
+      homeProfile.cornersFor,
+      awayProfile.cornersAgainst
+    ])
+  );
+
+  // Corner previsti ospite
+  const awayCorners = round1(
+    averageValues([
+      awayProfile.cornersFor,
+      homeProfile.cornersAgainst
+    ])
+  );
+
+  const totalCorners = round1(
+    homeCorners + awayCorners
+  );
+
+  // Gialli previsti casa
+  const homeYellow = round1(
+    averageValues([
+      homeProfile.yellowFor,
+      awayProfile.yellowAgainst
+    ])
+  );
+
+  // Gialli previsti ospite
+  const awayYellow = round1(
+    averageValues([
+      awayProfile.yellowFor,
+      homeProfile.yellowAgainst
+    ])
+  );
+
+  const totalYellow = round1(
+    homeYellow + awayYellow
+  );
+
+  // Stima prudente probabilità di almeno un rosso
+  const redMatchBase = averageValues([
+    homeProfile.redMatchRate,
+    awayProfile.redMatchRate
+  ]);
+
+  const redTeamBase = averageValues([
+    homeProfile.redForRate,
+    awayProfile.redForRate
+  ]);
+
+  const redProbability = clampPercent(
+    redMatchBase * 0.7 +
+    redTeamBase * 0.3
+  );
+
+  return {
+    sampleSize: Math.min(
+      safeNumber(homeProfile.sampleSize),
+      safeNumber(awayProfile.sampleSize)
+    ),
+
+    corners: {
+      home: homeCorners,
+      away: awayCorners,
+      total: totalCorners,
+      markets: buildCornerMarkets(totalCorners)
+    },
+
+    yellowCards: {
+      home: homeYellow,
+      away: awayYellow,
+      total: totalYellow,
+      markets: buildCardMarkets(totalYellow)
+    },
+
+    redCard: {
+      probability: redProbability
+    }
+  };
+}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
@@ -1823,3 +1917,4 @@ const leagueAverage =
   awayPlayed
 };
 }
+
