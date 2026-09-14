@@ -105,6 +105,35 @@ function poissonOverPercent(mean, line) {
     (1 - cumulative) * 100
   );
 }
+// Crea automaticamente le linee Over
+// partendo dal numero medio previsto
+function buildOverMarkets(mean, lines) {
+  const expected = Math.max(0, safeNumber(mean));
+
+  return {
+    expected: Number(expected.toFixed(1)),
+    markets: lines.map((line) => ({
+      line,
+      percent: poissonOverPercent(expected, line)
+    }))
+  };
+}
+
+// Linee dedicate ai corner
+function buildCornerMarkets(mean) {
+  return buildOverMarkets(
+    mean,
+    [7.5, 8.5, 9.5, 10.5]
+  );
+}
+
+// Linee dedicate ai cartellini gialli
+function buildCardMarkets(mean) {
+  return buildOverMarkets(
+    mean,
+    [2.5, 3.5, 4.5, 5.5]
+  );
+}
 // ==========================================
 // BLOCCO 2 - Utility e gestione interfaccia
 // ==========================================
