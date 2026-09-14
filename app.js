@@ -16,7 +16,7 @@ const leagueCheckboxes = document.querySelectorAll(
   '.league-grid input[type="checkbox"]'
 );
 
-let selectedStrategy = "GG / BTTS";
+let selectedStrategy = "Corner";
 let selectedDays = 1;
 
 // Selezione strategia
