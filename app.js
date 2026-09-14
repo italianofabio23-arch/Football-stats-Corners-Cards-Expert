@@ -552,10 +552,11 @@ async function renderMatches(matches) {
     );
     return;
   }
-resultsInfo.textContent = "🧠 Analisi Expert V5 in corso...";
+resultsInfo.textContent =
+  "🚩🟨 Analisi Corner & Cards in corso...";
 
 matches = await Promise.all(
-  matches.map(enrichMatchWithExpertData)
+  matches.map(enrichMatchWithCornerCardData)
 );
   matchesCount.textContent =
     `${matches.length} ${matches.length === 1 ? "partita" : "partite"}`;
