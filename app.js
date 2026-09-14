@@ -1019,6 +1019,45 @@ function parseCornerCardStatistics(
     }
   };
 }
+const recentFixturesCache = new Map();
+
+async function fetchRecentTeamFixtures(teamId, last = 6) {
+  const id = Number(teamId);
+  const limit = Math.max(1, Math.min(10, Number(last) || 6));
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return [];
+  }
+
+  const cacheKey = `${id}-${limit}`;
+
+  if (recentFixturesCache.has(cacheKey)) {
+    return recentFixturesCache.get(cacheKey);
+  }
+
+  const url =
+    `${BACKEND}/api/football?path=/fixtures&team=${id}&last=${limit}&status=FT`;
+
+  const response = await fetch(url, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Errore ultime partite squadra ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  const fixtures = Array.isArray(data.response)
+    ? data.response
+    : [];
+
+  recentFixturesCache.set(cacheKey, fixtures);
+
+  return fixtures;
+}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
