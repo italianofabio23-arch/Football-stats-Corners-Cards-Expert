@@ -438,12 +438,33 @@ function renderMatchCard(match) {
   const league = escapeHtml(match.league || "Campionato");
   const date = formatMatchDate(match.date);
 
-  const probabilities = match.probabilities || {};
+  const prediction = match.cornerCardPrediction;
 
-  const mainProbability = getMainProbability(match);
-  const mainLabel = getStrategyLabel();
-  const expertPrediction = getExpertPrediction(probabilities, match);
-  const confidenceScore = calculateConfidenceScore(match, expertPrediction);
+  if (!prediction) {
+    return `
+      <article class="match-card">
+        <div class="match-top">
+          <div class="match-league">${league}</div>
+          <div class="match-date">${escapeHtml(date)}</div>
+        </div>
+
+        <div class="teams">
+          ⚽ ${home} - ${away}
+        </div>
+
+        <div class="market-box">
+          <span>⚠️ Dati Corner/Card insufficienti</span>
+        </div>
+      </article>
+    `;
+  }
+
+  const cornerMarkets =
+    prediction.corners?.markets?.markets || [];
+
+  const cardMarkets =
+    prediction.yellowCards?.markets?.markets || [];
+
   return `
     <article class="match-card">
 
@@ -462,38 +483,76 @@ function renderMatchCard(match) {
       </div>
 
       <div class="market-grid">
-${renderMarketBox(
-  `🔥 Pronostico Expert: ${expertPrediction.label}`,
-  expertPrediction.value
-)}
-${renderMarketBox(
-  "🎯 Confidence Score",
-  confidenceScore
-)}
+
+        <div class="market-box">
+          <span>🚩 Corner previsti</span>
+          <div class="market-value">
+            ${prediction.corners.total}
+          </div>
+        </div>
+
+        <div class="market-box">
+          <span>🏠 Corner ${home}</span>
+          <div class="market-value">
+            ${prediction.corners.home}
+          </div>
+        </div>
+
+        <div class="market-box">
+          <span>✈️ Corner ${away}</span>
+          <div class="market-value">
+            ${prediction.corners.away}
+          </div>
+        </div>
+
+        ${cornerMarkets.map((market) =>
+          renderMarketBox(
+            `🚩 Over ${market.line} Corner`,
+            market.percent
+          )
+        ).join("")}
+
+        <div class="market-box">
+          <span>🟨 Gialli previsti</span>
+          <div class="market-value">
+            ${prediction.yellowCards.total}
+          </div>
+        </div>
+
+        <div class="market-box">
+          <span>🏠 Gialli ${home}</span>
+          <div class="market-value">
+            ${prediction.yellowCards.home}
+          </div>
+        </div>
+
+        <div class="market-box">
+          <span>✈️ Gialli ${away}</span>
+          <div class="market-value">
+            ${prediction.yellowCards.away}
+          </div>
+        </div>
+
+        ${cardMarkets.map((market) =>
+          renderMarketBox(
+            `🟨 Over ${market.line} Cartellini`,
+            market.percent
+          )
+        ).join("")}
+
         ${renderMarketBox(
-          mainLabel,
-          mainProbability
+          "🟥 Probabilità almeno un rosso",
+          prediction.redCard?.probability
         )}
 
-      ${mainLabel !== "GG / BTTS"
-  ? renderMarketBox("GG / BTTS", probabilities.btts)
-  : ""}
+        <div class="market-box">
+          <span>📊 Campione analizzato</span>
+          <div class="market-value">
+            ${prediction.sampleSize} partite
+          </div>
+        </div>
 
-${mainLabel !== "Over 2.5"
-  ? renderMarketBox("Over 2.5", probabilities.over25)
-  : ""}
-
-${renderXgBox("xG Casa", match.xg?.home)}
-${renderXgBox("xG Ospite", match.xg?.away)}
-${renderMarketBox("🏠 1 Casa", probabilities.homeWin)}
-${renderMarketBox("🤝 X Pareggio", probabilities.draw)}
-${renderMarketBox("✈️ 2 Ospite", probabilities.awayWin)}
-
-${mainLabel !== "Under 2.5"
-  ? renderMarketBox("Under 2.5", probabilities.under25)
-    : ""}
       </div>
-
     </article>
   `;
 }
