@@ -1361,6 +1361,47 @@ function buildMatchCornerCardPrediction(
     }
   };
 }
+
+function calculateCornerCardConfidence(prediction, type = "corner") {
+  if (!prediction) {
+    return 0;
+  }
+
+  const sampleSize = Number(prediction.sampleSize) || 0;
+
+  const markets =
+    type === "cards"
+      ? prediction.yellowCards?.markets?.markets || []
+      : prediction.corners?.markets?.markets || [];
+
+  const probabilities = markets
+    .map((market) => Number(market?.percent))
+    .filter((value) => Number.isFinite(value));
+
+  if (!probabilities.length || sampleSize <= 0) {
+    return 0;
+  }
+
+  const bestProbability = Math.max(...probabilities);
+
+  const sampleScore = Math.min(
+    100,
+    (sampleSize / 8) * 100
+  );
+
+  let confidence =
+    bestProbability * 0.70 +
+    sampleScore * 0.30;
+
+  if (sampleSize < 5) {
+    confidence -= 10;
+  }
+
+  return Math.max(
+    0,
+    Math.min(100, Math.round(confidence))
+  );
+}
 async function enrichMatchWithCornerCardData(match) {
   try {
     const sourceGame = match.raw || match;
@@ -1404,11 +1445,24 @@ async function enrichMatchWithCornerCardData(match) {
         homeProfile,
         awayProfile
       );
+const cornerConfidence =
+  calculateCornerCardConfidence(
+    cornerCardPrediction,
+    "corner"
+  );
 
+const cardConfidence =
+  calculateCornerCardConfidence(
+    cornerCardPrediction,
+    "cards"
+  );
     return {
       ...match,
-
-      cornerCardPrediction,
+cornerCardPrediction,
+     cornerCardConfidence: {
+  corner: cornerConfidence,
+  cards: cardConfidence
+}, 
 
       cornerCardProfiles: {
         home: homeProfile,
