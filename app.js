@@ -614,9 +614,15 @@ async function renderMatches(matches) {
 resultsInfo.textContent =
   "🚩🟨 Analisi Corner & Cards in corso...";
 
-matches = await Promise.all(
-  matches.map(enrichMatchWithCornerCardData)
-);
+const enrichedMatches = [];
+
+for (const match of matches) {
+  enrichedMatches.push(
+    await enrichMatchWithCornerCardData(match)
+  );
+}
+
+matches = enrichedMatches;
   matchesCount.textContent =
     `${matches.length} ${matches.length === 1 ? "partita" : "partite"}`;
 
