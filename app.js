@@ -544,7 +544,15 @@ function renderMatchCard(match) {
           "🟥 Probabilità almeno un rosso",
           prediction.redCard?.probability
         )}
+${renderMarketBox(
+  "🎯 Confidence Corner",
+  match.cornerCardConfidence?.corner
+)}
 
+${renderMarketBox(
+  "🎯 Confidence Cartellini",
+  match.cornerCardConfidence?.cards
+)}
         <div class="market-box">
           <span>📊 Campione analizzato</span>
           <div class="market-value">
