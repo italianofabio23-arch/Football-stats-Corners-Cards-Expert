@@ -18,7 +18,243 @@ const leagueCheckboxes = document.querySelectorAll(
 
 let selectedStrategy = "Corner";
 let selectedDays = 1;
+// ======================================================
+// STORICO AUTOMATICO CORNER & CARDS
+// ======================================================
 
+const HISTORY_STORAGE_KEY = "corner_cards_prediction_history_v1";
+
+function loadPredictionHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch (error) {
+    console.warn(
+      "Errore lettura storico:",
+      error
+    );
+
+    return [];
+  }
+}
+
+function savePredictionHistory(history) {
+  try {
+    localStorage.setItem(
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(history)
+    );
+  } catch (error) {
+    console.warn(
+      "Errore salvataggio storico:",
+      error
+    );
+  }
+}
+
+function getBestHistoryMarket(markets) {
+  if (!Array.isArray(markets) || !markets.length) {
+    return null;
+  }
+
+  return markets
+    .filter(
+      (market) =>
+        Number.isFinite(Number(market?.percent)) &&
+        Number.isFinite(Number(market?.line))
+    )
+    .sort(
+      (a, b) =>
+        Number(b.percent) -
+        Number(a.percent)
+    )[0] || null;
+}
+function recordPredictionHistory(match) {
+  const prediction = match?.cornerCardPrediction;
+
+  if (!prediction) {
+    return;
+  }
+
+  const history = loadPredictionHistory();
+
+  const fixtureId =
+    match?.raw?.fixture?.id ??
+    match?.fixture?.id ??
+    match?.id ??
+    null;
+
+  const baseData = {
+    fixtureId,
+    home: match?.home || "",
+    away: match?.away || "",
+    league: match?.league || "",
+    date: match?.date || "",
+    sampleSize: Number(prediction?.sampleSize) || 0,
+    status: "pending"
+  };
+
+  const selections = [
+    {
+      type: "corner",
+      market: getBestHistoryMarket(
+        prediction?.corners?.markets?.markets
+      ),
+      confidence: Number(
+        match?.cornerCardConfidence?.corner
+      ) || 0
+    },
+    {
+      type: "cards",
+      market: getBestHistoryMarket(
+        prediction?.yellowCards?.markets?.markets
+      ),
+      confidence: Number(
+        match?.cornerCardConfidence?.cards
+      ) || 0
+    }
+  ];
+
+  for (const selection of selections) {
+    if (!selection.market) {
+      continue;
+    }
+
+    const line = Number(selection.market.line);
+const probability = Number(selection.market.percent);
+
+const uniqueId =
+  `${fixtureId || `${baseData.date}-${baseData.home}-${baseData.away}`}` +
+  `-${selection.type}-${line}`;
+
+const existingIndex = history.findIndex(
+  (item) => item.id === uniqueId
+);
+
+const item = {
+  ...baseData,
+  id: uniqueId,
+  type: selection.type,
+  line,
+  probability,
+  confidence: selection.confidence,
+  updatedAt: new Date().toISOString()
+};
+
+if (existingIndex >= 0) {
+  history[existingIndex] = {
+    ...history[existingIndex],
+    ...item
+  };
+} else {
+  history.push({
+    ...item,
+    createdAt: new Date().toISOString(),
+    result: null,
+    won: null
+  });
+}
+}
+
+savePredictionHistory(history);
+}
+async function updatePredictionHistoryResults() {
+  const history = loadPredictionHistory();
+
+  if (!history.length) {
+    return;
+  }
+
+  let changed = false;
+
+  for (const item of history) {
+    if (
+      item.status === "settled" ||
+      !item.fixtureId
+    ) {
+      continue;
+    }
+
+    try {
+      const fixtureResponse = await fetch(
+        `${BACKEND}/api/football?path=/fixtures&fixture=${item.fixtureId}`,
+        { cache: "no-store" }
+      );
+
+      if (!fixtureResponse.ok) {
+        continue;
+      }
+
+      const fixtureData = await fixtureResponse.json();
+      const fixture = fixtureData?.response?.[0];
+
+      const status =
+        fixture?.fixture?.status?.short || "";
+
+      // Valutiamo solamente partite terminate
+if (!["FT", "AET", "PEN"].includes(status)) {
+  continue;
+}
+
+const statisticsResponse = await fetch(
+  `${BACKEND}/api/football?path=/fixtures/statistics&fixture=${item.fixtureId}`,
+  { cache: "no-store" }
+);
+
+if (!statisticsResponse.ok) {
+  continue;
+}
+
+const statisticsData = await statisticsResponse.json();
+
+const rows = Array.isArray(statisticsData?.response)
+  ? statisticsData.response
+  : [];
+
+if (!rows.length) {
+  continue;
+}
+
+const statName =
+  item.type === "corner"
+    ? "Corner Kicks"
+    : "Yellow Cards";
+
+const finalValue = rows.reduce(
+  (total, row) =>
+    total + Number(getFixtureStat(row, statName) || 0),
+  0
+);
+
+item.result = finalValue;
+item.won = finalValue > Number(item.line);
+item.status = "settled";
+item.settledAt = new Date().toISOString();
+
+changed = true;
+
+} catch (error) {
+  console.warn(
+    "Errore aggiornamento storico:",
+    item.fixtureId,
+    error
+  );
+}
+}
+
+if (changed) {
+  savePredictionHistory(history);
+}
+}
 // Selezione strategia
 presetButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -631,6 +867,12 @@ for (const match of matches) {
 }
 
 matches = enrichedMatches;
+  // Salva automaticamente i pronostici nello storico
+matches.forEach((match) => {
+  recordPredictionHistory(match);
+});
+  // Aggiorna automaticamente gli esiti dello storico
+await updatePredictionHistoryResults();
   matchesCount.textContent =
     `${matches.length} ${matches.length === 1 ? "partita" : "partite"}`;
 
