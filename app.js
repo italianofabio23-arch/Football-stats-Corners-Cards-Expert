@@ -433,21 +433,51 @@ function evaluateAntiFalseTop(
   // ==============================
 
   if (
-    !Number.isFinite(probabilityValue) ||
-    !Number.isFinite(confidenceValue) ||
+  !Number.isFinite(probabilityValue) ||
+  !Number.isFinite(confidenceValue)
+) {
+  return {
+    isTop: false,
+    status: "not-top",
+    label: "⚪ Non TOP • Dati insufficienti",
+    stats: historyStats
+  };
+}
+
+if (
+  (probabilityValue >= 80 && confidenceValue >= 75) ||
+  (confidenceValue >= 80 && probabilityValue >= 75)
+) {
+  if (
     probabilityValue < 80 ||
     confidenceValue < 80
   ) {
     return {
       isTop: false,
-      status: "not-top",
+      status: "almost-top",
       label:
-        `⚪ Non TOP • ` +
+        `🟠 QUASI TOP • ` +
         `P ${probabilityLabel}% • ` +
         `C ${confidenceLabel}%`,
       stats: historyStats
     };
   }
+}
+
+if (
+  probabilityValue < 80 ||
+  confidenceValue < 80
+) {
+  return {
+    isTop: false,
+    status: "not-top",
+    label:
+      `⚪ Non TOP • ` +
+      `P ${probabilityLabel}% • ` +
+      `C ${confidenceLabel}%`,
+    stats: historyStats
+  };
+      }
 
   // ==============================
   // FILTRO 2 - CAMPIONE MINIMO
