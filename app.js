@@ -326,14 +326,31 @@ function safeNumber(value) {
 function getHistoricalMarketStats(type, line) {
   const history = loadPredictionHistory();
 
-  const settled = history.filter((item) => {
-    return (
-      item.status === "settled" &&
-      item.type === type &&
-      Number(item.line) === Number(line) &&
-      typeof item.won === "boolean"
-    );
-  });
+  const lineValue = Number(line);
+
+  const getTime = (item) => {
+    const value =
+      item?.settledAt ||
+      item?.updatedAt ||
+      item?.createdAt ||
+      item?.date ||
+      0;
+
+    const time = new Date(value).getTime();
+
+    return Number.isFinite(time) ? time : 0;
+  };
+
+  const settled = history
+    .filter((item) => {
+      return (
+        item.status === "settled" &&
+        item.type === type &&
+        Math.abs(Number(item.line) - lineValue) < 0.001 &&
+        typeof item.won === "boolean"
+      );
+    })
+    .sort((a, b) => getTime(b) - getTime(a));
 
   const total = settled.length;
 
@@ -348,11 +365,44 @@ function getHistoricalMarketStats(type, line) {
       ? Math.round((wins / total) * 100)
       : 0;
 
+  // Ultimi 10 pronostici della stessa linea
+  const recent = settled.slice(0, 10);
+
+  const recentTotal = recent.length;
+
+  const recentWins = recent.filter(
+    (item) => item.won === true
+  ).length;
+
+  const recentHitRate =
+    recentTotal > 0
+      ? Math.round((recentWins / recentTotal) * 100)
+      : 0;
+
+  // Hit rate corretto per evitare che campioni piccoli
+  // sembrino più affidabili di quanto siano realmente
+  const smoothedHitRate =
+    total > 0
+      ? Math.round(
+          ((wins + 2) / (total + 4)) * 100
+        )
+      : 0;
+
+  const sampleReliability = Math.min(
+    100,
+    Math.round((total / 15) * 100)
+  );
+
   return {
     total,
     wins,
     losses,
-    hitRate
+    hitRate,
+    recentTotal,
+    recentWins,
+    recentHitRate,
+    smoothedHitRate,
+    sampleReliability
   };
 }
 
@@ -368,7 +418,20 @@ function evaluateAntiFalseTop(
   const historyStats =
     getHistoricalMarketStats(type, line);
 
-  // Probabilità o Confidence insufficienti
+  const probabilityLabel =
+    Number.isFinite(probabilityValue)
+      ? Math.round(probabilityValue)
+      : 0;
+
+  const confidenceLabel =
+    Number.isFinite(confidenceValue)
+      ? Math.round(confidenceValue)
+      : 0;
+
+  // ==============================
+  // FILTRO 1 - MODELLO BASE
+  // ==============================
+
   if (
     !Number.isFinite(probabilityValue) ||
     !Number.isFinite(confidenceValue) ||
@@ -377,38 +440,119 @@ function evaluateAntiFalseTop(
   ) {
     return {
       isTop: false,
-      label: "⚪ Non TOP"
+      status: "not-top",
+      label:
+        `⚪ Non TOP • ` +
+        `P ${probabilityLabel}% • ` +
+        `C ${confidenceLabel}%`,
+      stats: historyStats
     };
   }
 
-  // Storico ancora troppo piccolo
+  // ==============================
+  // FILTRO 2 - CAMPIONE MINIMO
+  // ==============================
+
   if (historyStats.total < 5) {
     return {
       isTop: false,
+      status: "waiting",
       label:
-        `🟡 In attesa storico ` +
-        `${historyStats.total}/5`
+        `🟡 In attesa esiti ` +
+        `${historyStats.total}/5`,
+      stats: historyStats
     };
   }
 
-  // Anti-false: storico reale troppo debole
+  // ==============================
+  // FILTRO 3 - HIT RATE GENERALE
+  // ==============================
+
   if (historyStats.hitRate < 70) {
     return {
       isTop: false,
+      status: "blocked",
       label:
-        `🛑 Bloccato • Storico ` +
-        `${historyStats.hitRate}%`
+        `🛑 Bloccato • ` +
+        `${historyStats.hitRate}% ` +
+        `(${historyStats.wins}/${historyStats.total})`,
+      stats: historyStats
     };
   }
 
+  // ==============================
+  // FILTRO 4 - CORREZIONE CAMPIONE
+  // ==============================
+
+  if (historyStats.smoothedHitRate < 68) {
+    return {
+      isTop: false,
+      status: "blocked",
+      label:
+        `🛑 Bloccato • Affidabilità ` +
+        `${historyStats.smoothedHitRate}%`,
+      stats: historyStats
+    };
+  }
+
+  // ==============================
+  // FILTRO 5 - FORMA RECENTE
+  // ==============================
+
+  if (
+    historyStats.recentTotal >= 5 &&
+    historyStats.recentHitRate < 60
+  ) {
+    return {
+      isTop: false,
+      status: "blocked",
+      label:
+        `🛑 Bloccato • Recenti ` +
+        `${historyStats.recentHitRate}%`,
+      stats: historyStats
+    };
+  }
+
+  // ==============================
+  // ANTI-FALSE SCORE
+  // ==============================
+
+  const antiFalseScore = Math.round(
+    probabilityValue * 0.25 +
+    confidenceValue * 0.25 +
+    historyStats.smoothedHitRate * 0.30 +
+    historyStats.recentHitRate * 0.20
+  );
+
+  if (antiFalseScore < 78) {
+    return {
+      isTop: false,
+      status: "blocked",
+      label:
+        `🟠 Quasi TOP • Score ` +
+        `${antiFalseScore}/100`,
+      stats: historyStats,
+      antiFalseScore
+    };
+  }
+
+  // ==============================
+  // TOP CONFERMATO
+  // ==============================
+
   return {
     isTop: true,
+    status: "top",
     label:
       `🔥 TOP CONFERMATO • ` +
       `${historyStats.hitRate}% ` +
-      `(${historyStats.wins}/${historyStats.total})`
+      `(${historyStats.wins}/${historyStats.total}) • ` +
+      `R${historyStats.recentTotal} ` +
+      `${historyStats.recentHitRate}%`,
+    stats: historyStats,
+    antiFalseScore
   };
-}
+                 }
 // ==========================================
 // CORNERS & CARDS - MODELLO CONTEGGI
 // ==========================================
