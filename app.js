@@ -788,7 +788,7 @@ ${renderMarketBox(
 ${renderMarketBox(
   "🎯 Confidence Cartellini",
   match.cornerCardConfidence?.cards
-)}
+
         <div class="market-box">
           <span>📊 Campione analizzato</span>
           <div class="market-value">
