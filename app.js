@@ -455,10 +455,15 @@ if (
     return {
       isTop: false,
       status: "almost-top",
-      label:
-        `🟠 QUASI TOP • ` +
-        `P ${probabilityLabel}% • ` +
-        `C ${confidenceLabel}%`,
+  label:
+  `🟠 QUASI TOP • ` +
+  `P ${probabilityLabel}% • ` +
+  `C ${confidenceLabel}% • ` +
+  `Manca ${
+    probabilityValue < 80
+      ? `${Math.ceil(80 - probabilityValue)}% P`
+      : `${Math.ceil(80 - confidenceValue)}% C`
+  }`,
       stats: historyStats
     };
   }
