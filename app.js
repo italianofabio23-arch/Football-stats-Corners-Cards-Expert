@@ -810,7 +810,24 @@ ${renderMarketBox(
 ${renderMarketBox(
   "🎯 Confidence Cartellini",
   match.cornerCardConfidence?.cards
+  )}
+${cornerAntiFalse ? `
+  <div class="market-box">
+    <span>🛡️ Anti-False Corner</span>
+    <div class="market-value">
+      ${escapeHtml(cornerAntiFalse.label)}
+    </div>
+  </div>
+` : ""}
 
+${cardsAntiFalse ? `
+  <div class="market-box">
+    <span>🛡️ Anti-False Cartellini</span>
+    <div class="market-value">
+      ${escapeHtml(cardsAntiFalse.label)}
+    </div>
+  </div>
+` : ""}
         <div class="market-box">
           <span>📊 Campione analizzato</span>
           <div class="market-value">
