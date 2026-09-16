@@ -700,7 +700,29 @@ function renderMatchCard(match) {
 
   const cardMarkets =
     prediction.yellowCards?.markets?.markets || [];
+const bestCornerMarket =
+  getBestHistoryMarket(cornerMarkets);
 
+const bestCardMarket =
+  getBestHistoryMarket(cardMarkets);
+
+const cornerAntiFalse = bestCornerMarket
+  ? evaluateAntiFalseTop(
+      "corner",
+      bestCornerMarket.line,
+      bestCornerMarket.percent,
+      match.cornerCardConfidence?.corner
+    )
+  : null;
+
+const cardsAntiFalse = bestCardMarket
+  ? evaluateAntiFalseTop(
+      "cards",
+      bestCardMarket.line,
+      bestCardMarket.percent,
+      match.cornerCardConfidence?.cards
+    )
+  : null;
   return `
     <article class="match-card">
 
