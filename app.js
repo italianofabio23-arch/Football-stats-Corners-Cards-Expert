@@ -319,6 +319,96 @@ function safeNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
                           }
+// ======================================
+// ANTI FALSE TOP - CONTROLLO STORICO
+// ======================================
+
+function getHistoricalMarketStats(type, line) {
+  const history = loadPredictionHistory();
+
+  const settled = history.filter((item) => {
+    return (
+      item.status === "settled" &&
+      item.type === type &&
+      Number(item.line) === Number(line) &&
+      typeof item.won === "boolean"
+    );
+  });
+
+  const total = settled.length;
+
+  const wins = settled.filter(
+    (item) => item.won === true
+  ).length;
+
+  const losses = total - wins;
+
+  const hitRate =
+    total > 0
+      ? Math.round((wins / total) * 100)
+      : 0;
+
+  return {
+    total,
+    wins,
+    losses,
+    hitRate
+  };
+}
+
+function evaluateAntiFalseTop(
+  type,
+  line,
+  probability,
+  confidence
+) {
+  const probabilityValue = Number(probability);
+  const confidenceValue = Number(confidence);
+
+  const historyStats =
+    getHistoricalMarketStats(type, line);
+
+  // Probabilità o Confidence insufficienti
+  if (
+    !Number.isFinite(probabilityValue) ||
+    !Number.isFinite(confidenceValue) ||
+    probabilityValue < 80 ||
+    confidenceValue < 80
+  ) {
+    return {
+      isTop: false,
+      label: "⚪ Non TOP"
+    };
+  }
+
+  // Storico ancora troppo piccolo
+  if (historyStats.total < 5) {
+    return {
+      isTop: false,
+      label:
+        `🟡 In attesa storico ` +
+        `${historyStats.total}/5`
+    };
+  }
+
+  // Anti-false: storico reale troppo debole
+  if (historyStats.hitRate < 70) {
+    return {
+      isTop: false,
+      label:
+        `🛑 Bloccato • Storico ` +
+        `${historyStats.hitRate}%`
+    };
+  }
+
+  return {
+    isTop: true,
+    label:
+      `🔥 TOP CONFERMATO • ` +
+      `${historyStats.hitRate}% ` +
+      `(${historyStats.wins}/${historyStats.total})`
+  };
+}
 // ==========================================
 // CORNERS & CARDS - MODELLO CONTEGGI
 // ==========================================
