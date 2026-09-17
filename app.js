@@ -323,10 +323,13 @@ function safeNumber(value) {
 // ANTI FALSE TOP - CONTROLLO STORICO
 // ======================================
 
-function getHistoricalMarketStats(type, line) {
+function getHistoricalMarketStats(type, line, league = "") {
   const history = loadPredictionHistory();
 
   const lineValue = Number(line);
+
+  const normalizedLeague =
+    String(league || "").trim().toLowerCase();
 
   const getTime = (item) => {
     const value =
@@ -341,7 +344,7 @@ function getHistoricalMarketStats(type, line) {
     return Number.isFinite(time) ? time : 0;
   };
 
-  const settled = history
+  const allSettled = history
     .filter((item) => {
       return (
         item.status === "settled" &&
@@ -351,6 +354,24 @@ function getHistoricalMarketStats(type, line) {
       );
     })
     .sort((a, b) => getTime(b) - getTime(a));
+
+  const leagueSettled = normalizedLeague
+    ? allSettled.filter(
+        (item) =>
+          String(item.league || "")
+            .trim()
+            .toLowerCase() === normalizedLeague
+      )
+    : [];
+
+  // Usa lo storico del campionato quando abbiamo
+  // almeno 5 esiti; altrimenti usa lo storico globale.
+  const useLeagueHistory =
+    leagueSettled.length >= 5;
+
+  const settled = useLeagueHistory
+    ? leagueSettled
+    : allSettled;
 
   const total = settled.length;
 
@@ -365,7 +386,6 @@ function getHistoricalMarketStats(type, line) {
       ? Math.round((wins / total) * 100)
       : 0;
 
-  // Ultimi 10 pronostici della stessa linea
   const recent = settled.slice(0, 10);
 
   const recentTotal = recent.length;
@@ -379,8 +399,6 @@ function getHistoricalMarketStats(type, line) {
       ? Math.round((recentWins / recentTotal) * 100)
       : 0;
 
-  // Hit rate corretto per evitare che campioni piccoli
-  // sembrino più affidabili di quanto siano realmente
   const smoothedHitRate =
     total > 0
       ? Math.round(
@@ -402,7 +420,10 @@ function getHistoricalMarketStats(type, line) {
     recentWins,
     recentHitRate,
     smoothedHitRate,
-    sampleReliability
+    sampleReliability,
+    historyScope:
+      useLeagueHistory ? "league" : "global",
+    leagueTotal: leagueSettled.length
   };
 }
 
@@ -410,13 +431,18 @@ function evaluateAntiFalseTop(
   type,
   line,
   probability,
-  confidence
+  confidence,
+  league = ""
 ) {
   const probabilityValue = Number(probability);
   const confidenceValue = Number(confidence);
 
   const historyStats =
-    getHistoricalMarketStats(type, line);
+    getHistoricalMarketStats(
+      type,
+      line,
+      league
+    );
 
   const probabilityLabel =
     Number.isFinite(probabilityValue)
@@ -980,8 +1006,9 @@ const cornerAntiFalse = bestCornerMarket
       "corner",
       bestCornerMarket.line,
       bestCornerMarket.percent,
-      match.cornerCardConfidence?.corner
-    )
+      match.cornerCardConfidence?.corner,
+match.league || ""
+)
   : null;
 
 const cardsAntiFalse = bestCardMarket
@@ -989,7 +1016,8 @@ const cardsAntiFalse = bestCardMarket
       "cards",
       bestCardMarket.line,
       bestCardMarket.percent,
-      match.cornerCardConfidence?.cards
+      match.cornerCardConfidence?.cards,
+      match.league || ""
     )
   : null;
   return `
