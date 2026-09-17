@@ -1111,8 +1111,26 @@ ${renderMarketBox(
 ${cornerAntiFalse ? `
   <div class="market-box">
     <span>🛡️ Anti-False Corner</span>
+
     <div class="market-value">
+
+      🚩 Over ${bestCornerMarket.line} Corner
+      <br>
+
       ${escapeHtml(cornerAntiFalse.label)}
+
+      ${
+        cornerAntiFalse.stats?.historyScope === "league"
+          ? `<br><small>
+              🏆 Storico campionato:
+              ${cornerAntiFalse.stats.total} esiti
+             </small>`
+          : `<br><small>
+              🌍 Storico globale:
+              ${cornerAntiFalse.stats?.total || 0} esiti
+             </small>`
+      }
+
     </div>
   </div>
 ` : ""}
