@@ -1761,6 +1761,98 @@ function averageValues(values) {
   );
 }
 
+// ======================================================
+// BACKFILL STORICO REALE CORNER
+// Usa partite già concluse per alimentare Anti-False
+// ======================================================
+
+function backfillCornerHistoryFromFixture(game, parsed) {
+  const fixtureId = Number(game?.fixture?.id);
+  const totalCorners = Number(parsed?.total?.corners);
+
+  if (
+    !Number.isFinite(fixtureId) ||
+    fixtureId <= 0 ||
+    !Number.isFinite(totalCorners)
+  ) {
+    return;
+  }
+
+  const status =
+    game?.fixture?.status?.short || "";
+
+  if (!["FT", "AET", "PEN"].includes(status)) {
+    return;
+  }
+
+  const league =
+    String(game?.league?.name || "").trim();
+
+  const home =
+    game?.teams?.home?.name || "";
+
+  const away =
+    game?.teams?.away?.name || "";
+
+  const date =
+    game?.fixture?.date || "";
+
+  const cornerLines = [
+    7.5,
+    8.5,
+    9.5,
+    10.5
+  ];
+
+  const history = loadPredictionHistory();
+
+  let changed = false;
+
+  for (const line of cornerLines) {
+
+    const existingIndex = history.findIndex(
+      (item) =>
+        Number(item?.fixtureId) === fixtureId &&
+        item?.type === "corner" &&
+        Math.abs(Number(item?.line) - line) < 0.001
+    );
+
+    const settledItem = {
+      fixtureId,
+      type: "corner",
+      line,
+      league,
+      home,
+      away,
+      date,
+      result: totalCorners,
+      won: totalCorners > line,
+      status: "settled",
+      source: "historical-backfill",
+      settledAt: date || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      history[existingIndex] = {
+        ...history[existingIndex],
+        ...settledItem
+      };
+    } else {
+      history.push({
+        id: `backfill-${fixtureId}-corner-${line}`,
+        ...settledItem,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    changed = true;
+  }
+
+  if (changed) {
+    savePredictionHistory(history);
+  }
+      }
 async function buildTeamCornerCardProfile(
   teamId,
   fixtures
@@ -1806,7 +1898,10 @@ async function buildTeamCornerCardProfile(
           homeId,
           awayId
         );
-
+backfillCornerHistoryFromFixture(
+  game,
+  parsed
+);
       const isHome = homeId === id;
 
       const own = isHome
