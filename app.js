@@ -1138,8 +1138,26 @@ ${cornerAntiFalse ? `
 ${cardsAntiFalse ? `
   <div class="market-box">
     <span>🛡️ Anti-False Cartellini</span>
+
     <div class="market-value">
+
+      🟨 Over ${bestCardMarket.line} Cartellini
+      <br>
+
       ${escapeHtml(cardsAntiFalse.label)}
+
+      ${
+        cardsAntiFalse.stats?.historyScope === "league"
+          ? `<br><small>
+              🏆 Storico campionato:
+              ${cardsAntiFalse.stats.total} esiti
+            </small>`
+          : `<br><small>
+              🌍 Storico globale:
+              ${cardsAntiFalse.stats?.total || 0} esiti
+            </small>`
+      }
+
     </div>
   </div>
 ` : ""}
