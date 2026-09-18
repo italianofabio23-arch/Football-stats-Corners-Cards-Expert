@@ -605,11 +605,11 @@ if (
     isTop: true,
     status: "top",
     label:
-      `🔥 TOP CONFERMATO • ` +
-      `${historyStats.hitRate}% ` +
-      `(${historyStats.wins}/${historyStats.total}) • ` +
-      `R${historyStats.recentTotal} ` +
-      `${historyStats.recentHitRate}%`,
+  `🔥 TOP CONFERMATO • Score ${antiFalseScore}/100 • ` +
+  `${historyStats.hitRate}% ` +
+  `(${historyStats.wins}/${historyStats.total}) • ` +
+  `R${historyStats.recentTotal} ` +
+  `${historyStats.recentHitRate}%`,
     stats: historyStats,
     antiFalseScore
   };
