@@ -453,7 +453,10 @@ function evaluateAntiFalseTop(
     Number.isFinite(confidenceValue)
       ? Math.round(confidenceValue)
       : 0;
-
+const baseScore = Math.min(
+  probabilityLabel,
+  confidenceLabel
+);
   // ==============================
   // FILTRO 1 - MODELLO BASE
   // ==============================
@@ -482,7 +485,7 @@ if (
       isTop: false,
       status: "almost-top",
   label:
-  `🟠 QUASI TOP • ` +
+  `🟠 QUASI TOP • Score Base ${baseScore}/100 • ` +
   `P ${probabilityLabel}% • ` +
   `C ${confidenceLabel}% • ` +
   `Manca ${
@@ -503,9 +506,9 @@ if (
     isTop: false,
     status: "not-top",
     label:
-      `⚪ Non TOP • ` +
-      `P ${probabilityLabel}% • ` +
-      `C ${confidenceLabel}%`,
+  `⚪ Non TOP • Score Base ${baseScore}/100 • ` +
+  `P ${probabilityLabel}% • ` +
+  `C ${confidenceLabel}%`,
     stats: historyStats
   };
       }
