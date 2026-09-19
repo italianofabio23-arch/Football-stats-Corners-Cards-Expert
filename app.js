@@ -1233,11 +1233,19 @@ async function renderMatches(matches) {
 resultsInfo.textContent =
   "🚩🟨 Analisi Corner & Cards in corso...";
 
-const enrichedMatches = await Promise.all(
-  matches.map((match) =>
-    enrichMatchWithCornerCardData(match)
-  )
-);
+const enrichedMatches = [];
+
+for (let i = 0; i < matches.length; i += 3) {
+  const batch = matches.slice(i, i + 3);
+
+  const batchResults = await Promise.all(
+    batch.map((match) =>
+      enrichMatchWithCornerCardData(match)
+    )
+  );
+
+  enrichedMatches.push(...batchResults);
+}
 
 matches = enrichedMatches;
   // Salva automaticamente i pronostici nello storico
