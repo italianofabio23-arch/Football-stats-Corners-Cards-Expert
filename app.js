@@ -1235,8 +1235,8 @@ resultsInfo.textContent =
 
 const enrichedMatches = [];
 
-for (let i = 0; i < matches.length; i += 3) {
-  const batch = matches.slice(i, i + 3);
+for (let i = 0; i < matches.length; i += 2) {
+  const batch = matches.slice(i, i + 2);
 
   const batchResults = await Promise.all(
     batch.map((match) =>
@@ -2151,8 +2151,8 @@ async function enrichMatchWithCornerCardData(match) {
 
     const [homeFixtures, awayFixtures] =
       await Promise.all([
-        fetchRecentTeamFixtures(homeTeamId, 6),
-        fetchRecentTeamFixtures(awayTeamId, 6)
+        fetchRecentTeamFixtures(homeTeamId, 4),
+        fetchRecentTeamFixtures(awayTeamId, 4)
       ]);
 
     const [homeProfile, awayProfile] =
