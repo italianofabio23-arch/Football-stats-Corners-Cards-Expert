@@ -1233,13 +1233,11 @@ async function renderMatches(matches) {
 resultsInfo.textContent =
   "🚩🟨 Analisi Corner & Cards in corso...";
 
-const enrichedMatches = [];
-
-for (const match of matches) {
-  enrichedMatches.push(
-    await enrichMatchWithCornerCardData(match)
-  );
-}
+const enrichedMatches = await Promise.all(
+  matches.map((match) =>
+    enrichMatchWithCornerCardData(match)
+  )
+);
 
 matches = enrichedMatches;
   // Salva automaticamente i pronostici nello storico
@@ -1247,7 +1245,9 @@ matches.forEach((match) => {
   recordPredictionHistory(match);
 });
   // Aggiorna automaticamente gli esiti dello storico
-await updatePredictionHistoryResults();
+updatePredictionHistoryResults().catch((error) => {
+  console.warn("Aggiornamento storico:", error);
+});
   matchesCount.textContent =
     `${matches.length} ${matches.length === 1 ? "partita" : "partite"}`;
 
@@ -2143,8 +2143,8 @@ async function enrichMatchWithCornerCardData(match) {
 
     const [homeFixtures, awayFixtures] =
       await Promise.all([
-        fetchRecentTeamFixtures(homeTeamId, 10),
-        fetchRecentTeamFixtures(awayTeamId, 10)
+        fetchRecentTeamFixtures(homeTeamId, 6),
+        fetchRecentTeamFixtures(awayTeamId, 6)
       ]);
 
     const [homeProfile, awayProfile] =
