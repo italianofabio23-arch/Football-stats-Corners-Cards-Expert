@@ -1164,6 +1164,35 @@ ${cardsAntiFalse ? `
     </div>
   </div>
 ` : ""}
+${Array.isArray(match.yellowCardCandidates) &&
+match.yellowCardCandidates.length > 0 ? `
+  <div class="market-box" style="grid-column: 1 / -1;">
+    <span>🟨 CANDIDATI AMMONIZIONE</span>
+
+    <div class="market-value">
+      ${match.yellowCardCandidates
+        .slice(0, 2)
+        .map((player) => `
+          <div style="margin-top:10px;">
+            <strong>
+              ${escapeHtml(player.name || "Giocatore")}
+            </strong>
+            • ${escapeHtml(player.teamSide || "")}
+
+            <br>
+
+            <small>
+              ⚽ ${escapeHtml(player.teamName || "")}
+              • Falli ${Number(player.fouls) || 0}
+              • Gialli ${Number(player.yellow) || 0}
+              • Score ${Number(player.yellowCardScore) || 0}/100
+            </small>
+          </div>
+        `)
+        .join("")}
+    </div>
+  </div>
+` : ""}
         <div class="market-box">
           <span>📊 Campione analizzato</span>
           <div class="market-value">
