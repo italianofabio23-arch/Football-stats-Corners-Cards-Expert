@@ -2569,7 +2569,7 @@ cornerCardPrediction,
   cornerCardPrediction: null,
   yellowCardCandidates: []
 };
-}
+}}
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
   const dates = getSearchDates();
