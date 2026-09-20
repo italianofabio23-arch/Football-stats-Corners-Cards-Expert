@@ -2662,41 +2662,7 @@ const cardConfidence =
     cornerCardPrediction,
     "cards"
   );
-    let yellowCardCandidates = [];
-
-if (cardConfidence >= 45) {
-  const [homeCandidates, awayCandidates] =
-    await Promise.all([
-      buildYellowCardCandidates(
-        homeTeamId,
-        homeFixtures
-      ),
-      buildYellowCardCandidates(
-        awayTeamId,
-        awayFixtures
-      )
-    ]);
-
-  yellowCardCandidates = [
-    ...homeCandidates.map((player) => ({
-      ...player,
-      teamSide: "Casa",
-      teamName: match.home
-    })),
-
-    ...awayCandidates.map((player) => ({
-      ...player,
-      teamSide: "Ospite",
-      teamName: match.away
-    }))
-  ]
-    .sort(
-      (a, b) =>
-        b.yellowCardScore -
-        a.yellowCardScore
-    )
-    .slice(0, 2);
-}
+    const yellowCardCandidates = [];
     return {
       ...match,
 cornerCardPrediction,
