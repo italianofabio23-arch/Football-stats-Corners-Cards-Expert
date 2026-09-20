@@ -1629,7 +1629,301 @@ async function fetchFixtureStatistics(fixtureId) {
 
   return statistics;
 }
-// Legge un singolo valore dalle statistiche API-Football
+// ==========================================
+// V6 CORNER & CARDS - DATI GIOCATORI
+// ==========================================
+
+const fixturePlayersCache = new Map();
+
+async function fetchFixturePlayers(fixtureId) {
+  const id = Number(fixtureId);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return [];
+  }
+
+  if (fixturePlayersCache.has(id)) {
+    return fixturePlayersCache.get(id);
+  }
+
+  try {
+    const url =
+      `${BACKEND}/api/football?path=/fixtures/players&fixture=${id}`;
+
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Errore giocatori fixture ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    const players = Array.isArray(data.response)
+      ? data.response
+      : [];
+
+    fixturePlayersCache.set(id, players);
+
+    return players;
+
+  } catch (error) {
+    console.warn(
+      "Dati giocatori non disponibili:",
+      id,
+      error
+    );
+
+    fixturePlayersCache.set(id, []);
+    return [];
+  }
+}
+// ==========================================
+// PROFILO GIOCATORE - FALLI E CARTELLINI
+// ==========================================
+
+function extractPlayerCardStats(playerData, teamId) {
+  const teams = Array.isArray(playerData)
+    ? playerData
+    : [];
+
+  const teamBlock = teams.find(
+    (item) =>
+      Number(item?.team?.id) === Number(teamId)
+  );
+
+  const players = Array.isArray(teamBlock?.players)
+    ? teamBlock.players
+    : [];
+
+  return players
+    .map((entry) => {
+      const stats =
+        Array.isArray(entry?.statistics)
+          ? entry.statistics[0] || {}
+          : {};
+
+      const playerId = Number(entry?.player?.id);
+
+      if (!Number.isFinite(playerId)) {
+        return null;
+      }
+
+      return {
+        id: playerId,
+
+        name:
+          entry?.player?.name ||
+          "Giocatore",
+
+        position:
+          stats?.games?.position ||
+          "",
+appearances:
+  safeNumber(
+    stats?.games?.appearences ??
+    stats?.games?.appearances
+  ),
+        minutes:
+          safeNumber(
+            stats?.games?.minutes
+          ),
+
+        fouls:
+          safeNumber(
+            stats?.fouls?.committed
+          ),
+
+        yellow:
+          safeNumber(
+            stats?.cards?.yellow
+          ),
+
+        red:
+          safeNumber(
+            stats?.cards?.red
+          )
+      };
+    })
+    .filter(Boolean);
+}
+// ==========================================
+// YELLOW CARD SCORE 0-100
+// ==========================================
+
+function calculateYellowCardScore(player) {
+  const appearances = Math.max(
+    1,
+    safeNumber(player?.appearances)
+  );
+
+  const minutes = safeNumber(player?.minutes);
+  const fouls = safeNumber(player?.fouls);
+  const yellow = safeNumber(player?.yellow);
+
+  const yellowRate = Math.min(
+    1,
+    yellow / appearances
+  );
+
+  const foulsPer90 =
+    minutes > 0
+      ? (fouls / minutes) * 90
+      : 0;
+
+  const yellowScore =
+    yellowRate * 45;
+
+  const foulScore =
+    Math.min(
+      1,
+      foulsPer90 / 3
+    ) * 35;
+
+  const sampleScore =
+    Math.min(
+      1,
+      appearances / 4
+    ) * 10;
+
+  const position =
+    String(player?.position || "")
+      .toUpperCase();
+
+  let positionScore = 0;
+
+  if (
+    position.includes("DEF") ||
+    position.includes("MID")
+  ) {
+    positionScore = 10;
+  } else if (
+    position.includes("ATT") ||
+    position.includes("FWD")
+  ) {
+    positionScore = 4;
+  }
+
+  const score =
+    yellowScore +
+    foulScore +
+    sampleScore +
+    positionScore;
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(score)
+    )
+  );
+}
+
+
+//
+// TOP 1-2 CANDIDATI AMMONIZIONE
+//
+
+async function buildYellowCardCandidates(
+  teamId,
+  fixtures
+) {
+  const recentFixtures = Array.isArray(fixtures)
+    ? fixtures.slice(0, 4)
+    : [];
+
+  if (!recentFixtures.length) {
+    return [];
+  }
+
+  const playerMap = new Map();
+
+  const fixtureResults = await Promise.all(
+    recentFixtures.map(async (fixture) => {
+      const fixtureId = Number(
+        fixture?.fixture?.id ??
+        fixture?.id ??
+        fixture?.raw?.fixture?.id
+      );
+
+      if (!Number.isFinite(fixtureId)) {
+        return [];
+      }
+
+      const playerData =
+        await fetchFixturePlayers(fixtureId);
+
+      return extractPlayerCardStats(
+        playerData,
+        teamId
+      );
+    })
+  );
+
+  fixtureResults
+    .flat()
+    .forEach((player) => {
+      if (!player?.id) {
+        return;
+      }
+
+      if (!playerMap.has(player.id)) {
+        playerMap.set(player.id, {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          appearances: 0,
+          minutes: 0,
+          fouls: 0,
+          yellow: 0,
+          red: 0
+        });
+      }
+
+      const current =
+        playerMap.get(player.id);
+
+      const minutes =
+        safeNumber(player.minutes);
+
+      if (minutes > 0) {
+        current.appearances += 1;
+      }
+
+      current.minutes += minutes;
+      current.fouls += safeNumber(player.fouls);
+      current.yellow += safeNumber(player.yellow);
+      current.red += safeNumber(player.red);
+
+      if (!current.position && player.position) {
+        current.position = player.position;
+      }
+    });
+
+  return Array.from(playerMap.values())
+    .map((player) => ({
+      ...player,
+      yellowCardScore:
+        calculateYellowCardScore(player)
+    }))
+    .filter(
+      (player) =>
+        player.appearances >= 2 &&
+        player.minutes >= 90 &&
+        player.yellowCardScore >= 55
+    )
+    .sort(
+      (a, b) =>
+        b.yellowCardScore -
+        a.yellowCardScore
+    )
+    .slice(0, 2);
+}
+
+// Legge un singolo valore dalle statistiche
 function getFixtureStat(teamStats, type) {
   const stats = Array.isArray(teamStats?.statistics)
     ? teamStats.statistics
