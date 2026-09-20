@@ -1294,7 +1294,162 @@ updatePredictionHistoryResults().catch((error) => {
     `${matches.length} risultati`;
 
   resultsContainer.innerHTML =
+  renderCornerCardModerateSlip(matches) +
   matches.map(renderMatchCard).join("");
+}
+  function renderCornerCardModerateSlip(matches) {
+  const candidates = [];
+
+  matches.forEach((match) => {
+    const prediction = match.cornerCardPrediction;
+
+    if (!prediction) return;
+
+    const cornerConfidence =
+      Number(match.cornerCardConfidence?.corner) || 0;
+
+    const cardConfidence =
+      Number(match.cornerCardConfidence?.cards) || 0;
+
+    const options = [];
+
+    const cornerMarkets =
+      prediction.corners?.markets?.markets || [];
+
+    const cardMarkets =
+      prediction.yellowCards?.markets?.markets || [];
+
+    cornerMarkets.forEach((market) => {
+      const probability = Number(market.percent);
+
+      if (
+        probability >= 65 &&
+        cornerConfidence >= 50
+      ) {
+        options.push({
+          label: `🚩 Over ${market.line} Corner`,
+          value: probability,
+          confidence: cornerConfidence
+        });
+      }
+    });
+
+    cardMarkets.forEach((market) => {
+      const probability = Number(market.percent);
+
+      if (
+        probability >= 65 &&
+        cardConfidence >= 50
+      ) {
+        options.push({
+          label: `🟨 Over ${market.line} Cartellini`,
+          value: probability,
+          confidence: cardConfidence
+        });
+      }
+    });
+
+    options.sort((a, b) => {
+      const scoreA =
+        a.value * 0.65 +
+        a.confidence * 0.35;
+
+      const scoreB =
+        b.value * 0.65 +
+        b.confidence * 0.35;
+
+      return scoreB - scoreA;
+    });
+
+    if (options.length) {
+      candidates.push({
+        match,
+        prediction: options[0],
+        score:
+          options[0].value * 0.65 +
+          options[0].confidence * 0.35
+      });
+    }
+  });
+
+  const picks = candidates
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+
+  if (!picks.length) {
+    return `
+      <article class="match-card">
+        <div class="teams">
+          🎯 SCHEDINA CORNER & CARDS
+        </div>
+
+        <div class="market-box">
+          Nessun evento sufficientemente affidabile
+        </div>
+      </article>
+    `;
+  }
+
+  const totalOdds = picks.reduce(
+    (total, item) =>
+      total * (100 / item.prediction.value),
+    1
+  );
+
+  return `
+    <article class="match-card">
+
+      <div class="teams">
+        🎯 SCHEDINA CORNER & CARDS MODERATA
+      </div>
+
+      <div class="market-grid">
+
+        ${picks.map(({ match, prediction }) => `
+          <div class="market-box">
+
+            <span>
+              ${escapeHtml(match.home)}
+              -
+              ${escapeHtml(match.away)}
+              <br>
+              ${escapeHtml(prediction.label)}
+            </span>
+
+            <div class="market-value">
+              ${Math.round(prediction.value)}%
+              <br>
+
+              <small>
+                🎯 Confidence
+                ${Math.round(prediction.confidence)}%
+                <br>
+                Quota stimata
+                ${(100 / prediction.value).toFixed(2)}
+              </small>
+
+            </div>
+          </div>
+        `).join("")}
+
+      </div>
+
+      <div class="market-box"
+           style="margin-top:16px;">
+
+        <span>
+          💰 Quota totale stimata
+        </span>
+
+        <div class="market-value">
+          ${totalOdds.toFixed(2)}
+        </div>
+
+      </div>
+
+    </article>
+  `;
+  }
     }
 function renderTop80Slip(matches) {
   const picks = matches
