@@ -1450,7 +1450,7 @@ updatePredictionHistoryResults().catch((error) => {
     </article>
   `;
   }
-    }
+    
 function renderTop80Slip(matches) {
   const picks = matches
     .map((match) => ({
