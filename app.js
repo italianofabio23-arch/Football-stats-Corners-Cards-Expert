@@ -2097,7 +2097,7 @@ async function buildYellowCardCandidates(
       (player) =>
         player.appearances >= 2 &&
         player.minutes >= 90 &&
-        player.yellowCardScore >= 55
+        player.yellowCardScore >= 45
     )
     .sort(
       (a, b) =>
