@@ -2478,10 +2478,46 @@ const cardConfidence =
     cornerCardPrediction,
     "cards"
   );
+    let yellowCardCandidates = [];
+
+if (cardConfidence >= 65) {
+  const [homeCandidates, awayCandidates] =
+    await Promise.all([
+      buildYellowCardCandidates(
+        homeTeamId,
+        homeFixtures
+      ),
+      buildYellowCardCandidates(
+        awayTeamId,
+        awayFixtures
+      )
+    ]);
+
+  yellowCardCandidates = [
+    ...homeCandidates.map((player) => ({
+      ...player,
+      teamSide: "Casa",
+      teamName: match.home
+    })),
+
+    ...awayCandidates.map((player) => ({
+      ...player,
+      teamSide: "Ospite",
+      teamName: match.away
+    }))
+  ]
+    .sort(
+      (a, b) =>
+        b.yellowCardScore -
+        a.yellowCardScore
+    )
+    .slice(0, 2);
+}
     return {
       ...match,
 cornerCardPrediction,
-     cornerCardConfidence: {
+     yellowCardCandidates,
+       cornerCardConfidence: {
   corner: cornerConfidence,
   cards: cardConfidence
 }, 
@@ -2500,10 +2536,10 @@ cornerCardPrediction,
     );
 
     return {
-      ...match,
-      cornerCardPrediction: null
-    };
-  }
+  ...match,
+  cornerCardPrediction: null,
+  yellowCardCandidates: []
+};
 }
 // Scarica tutte le partite della finestra selezionata
 async function fetchAllFixtures() {
