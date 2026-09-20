@@ -2509,7 +2509,7 @@ const cardConfidence =
   );
     let yellowCardCandidates = [];
 
-if (cardConfidence >= 65) {
+if (cardConfidence >= 45) {
   const [homeCandidates, awayCandidates] =
     await Promise.all([
       buildYellowCardCandidates(
