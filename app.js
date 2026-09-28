@@ -1413,7 +1413,7 @@ updatePredictionHistoryResults().catch((error) => {
     return `
       <article class="match-card">
         <div class="teams">
-          🎯 SCHEDINA CORNER & CARDS
+        🔥 SCHEDINA EXPERT CORNER & CARDS 5-6
         </div>
 
         <div class="market-box">
