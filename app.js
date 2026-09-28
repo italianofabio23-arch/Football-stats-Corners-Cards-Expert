@@ -1181,12 +1181,40 @@ match.yellowCardCandidates.length > 0 ? `
 
             <br>
 
-            <small>
-              ⚽ ${escapeHtml(player.teamName || "")}
-              • Falli ${Number(player.fouls) || 0}
-              • Gialli ${Number(player.yellow) || 0}
-              • Score ${Number(player.yellowCardScore) || 0}/100
-            </small>
+          <small>
+  ⚽ ${escapeHtml(player.teamName || "")}
+  • Presenze ${Number(player.appearances) || 0}
+
+  <br>
+
+  ⚔️ Falli ${Number(player.fouls) || 0}
+  • Falli/90 ${
+    Number(player.minutes) > 0
+      ? (
+          (Number(player.fouls) || 0) /
+          Number(player.minutes) *
+          90
+        ).toFixed(1)
+      : "0.0"
+  }
+
+  <br>
+
+  🟨 Gialli ${Number(player.yellow) || 0}
+  • Gialli/partita ${
+    Number(player.appearances) > 0
+      ? (
+          (Number(player.yellow) || 0) /
+          Number(player.appearances)
+        ).toFixed(2)
+      : "0.00"
+  }
+
+  <br>
+
+  🎯 Indice rischio:
+  ${Number(player.yellowCardScore) || 0}/100
+</small>
           </div>
         `)
         .join("")}
