@@ -1401,10 +1401,15 @@ updatePredictionHistoryResults().catch((error) => {
   });
 
   const picks = candidates
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+  .filter((item) =>
+    item.prediction.value >= 68 &&
+    item.prediction.confidence >= 55 &&
+    item.score >= 65
+  )
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 6);
 
-  if (!picks.length) {
+  if (picks.length < 5) {
     return `
       <article class="match-card">
         <div class="teams">
@@ -1412,7 +1417,7 @@ updatePredictionHistoryResults().catch((error) => {
         </div>
 
         <div class="market-box">
-          Nessun evento sufficientemente affidabile
+          Servono almeno 5 eventi Expert sufficientemente affidabili
         </div>
       </article>
     `;
@@ -1428,7 +1433,7 @@ updatePredictionHistoryResults().catch((error) => {
     <article class="match-card">
 
       <div class="teams">
-        🎯 SCHEDINA CORNER & CARDS MODERATA
+        🔥 SCHEDINA EXPERT CORNER & CARDS 5-6
       </div>
 
       <div class="market-grid">
