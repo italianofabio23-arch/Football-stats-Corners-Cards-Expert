@@ -2068,6 +2068,32 @@ const recentFixtures = Array.isArray(fixtures)
     return [];
   }
 
+  const candidateCacheKey =
+    "yellow_candidates_v2_" +
+    teamId + "_" +
+    recentFixtures
+      .map(game => game.fixture.id)
+      .join("_");
+
+  let savedCandidates = null;
+
+  try {
+    savedCandidates = JSON.parse(
+      localStorage.getItem(candidateCacheKey)
+    );
+  } catch (error) {
+    savedCandidates = null;
+  }
+
+  if (
+    savedCandidates &&
+    Array.isArray(savedCandidates.players) &&
+    Date.now() - savedCandidates.savedAt <
+      6 * 60 * 60 * 1000
+  ) {
+    return savedCandidates.players;
+  }
+  
   const playerMap = new Map();
 
   const fixtureResults = await Promise.all(
@@ -2132,7 +2158,7 @@ const recentFixtures = Array.isArray(fixtures)
       }
     });
 
-  return Array.from(playerMap.values())
+  const candidates = Array.from(playerMap.values())
     .map((player) => ({
       ...player,
       yellowCardScore:
@@ -2150,6 +2176,23 @@ const recentFixtures = Array.isArray(fixtures)
         a.yellowCardScore
     )
     .slice(0, 2);
+  
+  try {
+    if (candidates.length > 0) {
+      localStorage.setItem(
+        candidateCacheKey,
+        JSON.stringify({
+          players: candidates,
+          savedAt: Date.now()
+        })
+      );
+    }
+  } catch (error) {
+    console.warn("Cache ammoniti:", error);
+  }
+
+  return candidates;
+  
 }
 
 // Legge un singolo valore dalle statistiche
