@@ -2048,9 +2048,21 @@ async function buildYellowCardCandidates(
   teamId,
   fixtures
 ) {
-  const recentFixtures = Array.isArray(fixtures)
-    ? fixtures.slice(0, 4)
-    : [];
+  
+const recentFixtures = Array.isArray(fixtures)
+  ? [...fixtures]
+      .filter((game) =>
+        Number.isFinite(
+          Date.parse(game?.fixture?.date || "")
+        )
+      )
+      .sort((a, b) =>
+        Date.parse(b.fixture.date) -
+        Date.parse(a.fixture.date)
+      )
+      .slice(0, 4)
+  : [];
+  
 
   if (!recentFixtures.length) {
     return [];
