@@ -2001,10 +2001,10 @@ function calculateYellowCardScore(player) {
     ) * 35;
 
   const sampleScore =
-    Math.min(
-      1,
-      appearances / 4
-    ) * 10;
+  Math.min(
+    1,
+    appearances / 8
+  ) * 10;
 
   const position =
     String(player?.position || "")
