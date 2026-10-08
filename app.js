@@ -2717,8 +2717,8 @@ async function enrichMatchWithCornerCardData(match) {
 
     const [homeFixtures, awayFixtures] =
       await Promise.all([
-        fetchRecentTeamFixtures(homeTeamId, 4),
-        fetchRecentTeamFixtures(awayTeamId, 4)
+        fetchRecentTeamFixtures(homeTeamId, 8),
+        fetchRecentTeamFixtures(awayTeamId, 8)
       ]);
 
     const [homeProfile, awayProfile] =
