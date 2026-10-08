@@ -2060,7 +2060,7 @@ const recentFixtures = Array.isArray(fixtures)
         Date.parse(b.fixture.date) -
         Date.parse(a.fixture.date)
       )
-      .slice(0, 4)
+      .slice(0, 8)
   : [];
   
 
