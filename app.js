@@ -1752,7 +1752,10 @@ SC1: "Premiership",
 SERIE_B: "Serie B",
   CL: "UEFA Champions League",
   EL: "UEFA Europa League",
-  CH: "Championship"
+  CH: "Championship",
+  BR1: "Serie A",
+  BR2: "Serie B"
+
 };
 
 // Data YYYY-MM-DD senza problemi di fuso orario
@@ -2830,24 +2833,46 @@ async function fetchAllFixtures() {
 }
 
 // Filtra solo i campionati scelti
-function filterSelectedLeagues(games) {
-  const selected = getSelectedLeagueNames();
 
-  if (!selected.length) {
+function filterSelectedLeagues(games) {
+  const selectedCodes = getSelectedLeagues();
+
+  if (!selectedCodes.length) {
     return [];
   }
 
   return games.filter((game) => {
-    const leagueName = String(
-  game.competition?.name ||
-  game.league?.name ||
-  game.league ||
-  ""
-).trim();
+    const league = game.competition || game.league || {};
 
-    return selected.includes(leagueName);
+    const leagueName = String(
+      league?.name || (typeof league === "string" ? league : "")
+    ).trim();
+
+    const country = String(
+      league?.country ||
+      game.country?.name ||
+      game.country ||
+      ""
+    ).trim().toLowerCase();
+
+    return selectedCodes.some((code) => {
+      const expectedName = LEAGUE_NAMES[code];
+
+      if (leagueName !== expectedName) return false;
+
+      if (code === "BR1" || code === "BR2") {
+        return country === "brazil" || country === "brasil";
+      }
+
+      if (code === "SA" || code === "SERIE_B") {
+        return country === "italy" || country === "italia";
+      }
+
+      return true;
+    });
   });
-    }
+}
+
 // ==========================================
 // BLOCCO 4B - Normalizzazione dati partite
 // ==========================================
