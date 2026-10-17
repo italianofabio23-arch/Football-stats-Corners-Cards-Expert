@@ -2861,25 +2861,60 @@ function filterSelectedLeagues(games) {
       league?.name || (typeof league === "string" ? league : "")
     ).trim();
 
+    
     const country = String(
-      league?.country ||
+      game.league?.country ||
+      game.competition?.country?.name ||
+      game.competition?.country ||
       game.country?.name ||
       game.country ||
       ""
     ).trim().toLowerCase();
 
+    const leagueId = Number(
+      game.league?.id ??
+      game.competition?.id ??
+      0
+    );
+    
+
     return selectedCodes.some((code) => {
       const expectedName = LEAGUE_NAMES[code];
 
-      if (leagueName !== expectedName) return false;
+      
+if (
+  !["BR1", "BR2", "SA", "SERIE_B"].includes(code) &&
+  leagueName !== expectedName
+) return false;
+      
 
-      if (code === "BR1" || code === "BR2") {
-        return country === "brazil" || country === "brasil";
-      }
+      
+if (code === "BR1") {
+  return leagueId === 71 ||
+    (leagueName === "Serie A" &&
+     ["brazil", "brasil"].includes(country));
+}
 
-      if (code === "SA" || code === "SERIE_B") {
-        return country === "italy" || country === "italia";
-      }
+if (code === "BR2") {
+  return leagueId === 72 ||
+    (leagueName === "Serie B" &&
+     ["brazil", "brasil"].includes(country));
+}
+      
+
+if (code === "SA") {
+  return leagueId === 135 ||
+    (leagueName === "Serie A" &&
+     ["italy", "italia"].includes(country));
+}
+
+if (code === "SERIE_B") {
+  return leagueId === 136 ||
+    (leagueName === "Serie B" &&
+     ["italy", "italia"].includes(country));
+}
+      
+    
 
       return true;
     });
