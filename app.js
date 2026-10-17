@@ -2842,8 +2842,21 @@ function filterSelectedLeagues(games) {
   }
 
   return games.filter((game) => {
-    const league = game.competition || game.league || {};
+    const league = game.competition || game.league || {}; 
 
+    if (
+      game?.league?.name === "Serie A" ||
+      game?.league?.name === "Serie B" ||
+      game?.competition?.name === "Serie A" ||
+      game?.competition?.name === "Serie B"
+    ) {
+      console.log("DEBUG CAMPIONATO", {
+        league: game.league,
+        competition: game.competition,
+        country: game.country
+      });
+    }
+    
     const leagueName = String(
       league?.name || (typeof league === "string" ? league : "")
     ).trim();
