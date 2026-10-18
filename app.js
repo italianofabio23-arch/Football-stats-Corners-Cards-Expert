@@ -186,7 +186,9 @@ async function updatePredictionHistoryResults() {
 
     try {
       const fixtureResponse = await fetch(
-        `${BACKEND}/api/football?path=/fixtures&fixture=${item.fixtureId}`,
+        
+`${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures`,
+        
         { cache: "no-store" }
       );
 
@@ -206,7 +208,9 @@ if (!["FT", "AET", "PEN"].includes(status)) {
 }
 
 const statisticsResponse = await fetch(
-  `${BACKEND}/api/football?path=/fixtures/statistics&fixture=${item.fixtureId}`,
+  
+`${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures%2Fstatistics`,
+  
   { cache: "no-store" }
 );
 
