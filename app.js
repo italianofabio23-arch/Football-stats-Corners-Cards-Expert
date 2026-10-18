@@ -1133,6 +1133,23 @@ ${(prediction.corners?.awayMarkets?.markets || [])
             market.percent
           )
         ).join("")}
+        
+${(prediction.yellowCards?.homeMarkets?.markets || [])
+  .map((market) =>
+    renderMarketBox(
+      `🏠 ${home} Over ${market.line} Cartellini`,
+      market.percent
+    )
+  ).join("")}
+
+${(prediction.yellowCards?.awayMarkets?.markets || [])
+  .map((market) =>
+    renderMarketBox(
+      `✈️ ${away} Over ${market.line} Cartellini`,
+      market.percent
+    )
+  ).join("")}
+  
 
         ${renderMarketBox(
           "🟥 Probabilità almeno un rosso",
