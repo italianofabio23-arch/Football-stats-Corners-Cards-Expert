@@ -85,6 +85,32 @@ function recordPredictionHistory(match) {
     return;
   }
 
+  // ANTI-FALSE: registra solo pronostici pre-match
+  const rawStatus =
+    match?.raw?.fixture?.status?.short ??
+    match?.raw?.status ??
+    match?.status ??
+    "";
+
+  const matchStatus = String(rawStatus)
+    .trim()
+    .toUpperCase();
+
+  const kickoff = Date.parse(
+    match?.raw?.fixture?.date ??
+    match?.raw?.utcDate ??
+    match?.date ??
+    ""
+  );
+
+  if (
+    !Number.isFinite(kickoff) ||
+    kickoff <= Date.now() ||
+    !["NS", "SCHEDULED", "TIMED"].includes(matchStatus)
+  ) {
+    return;
+  }
+  
   const history = loadPredictionHistory();
 
   const fixtureId =
