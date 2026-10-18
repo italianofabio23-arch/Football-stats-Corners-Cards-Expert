@@ -1826,8 +1826,10 @@ async function fetchFixtureStatistics(fixtureId) {
     return fixtureStatsCache.get(id);
   }
 
-  const url =
-    `${BACKEND}/api/football?path=/fixtures/statistics&fixture=${id}`;
+  
+const url =
+  `${BACKEND}/api/football?fixture=${id}&path=%2Ffixtures%2Fstatistics`;
+  
 
   const response = await fetch(url, {
     cache: "no-store"
