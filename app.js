@@ -1088,6 +1088,23 @@ const cardsAntiFalse = bestCardMarket
             market.percent
           )
         ).join("")}
+        
+${(prediction.corners?.homeMarkets?.markets || [])
+  .map((market) =>
+    renderMarketBox(
+      `🏠 ${home} Over ${market.line} Corner`,
+      market.percent
+    )
+  ).join("")}
+
+${(prediction.corners?.awayMarkets?.markets || [])
+  .map((market) =>
+    renderMarketBox(
+      `✈️ ${away} Over ${market.line} Corner`,
+      market.percent
+    )
+  ).join("")}
+  
 
         <div class="market-box">
           <span>🟨 Gialli previsti</span>
