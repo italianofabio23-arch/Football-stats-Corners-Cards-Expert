@@ -2660,19 +2660,25 @@ function buildMatchCornerCardPrediction(
       safeNumber(awayProfile.sampleSize)
     ),
 
+    
     corners: {
       home: homeCorners,
       away: awayCorners,
       total: totalCorners,
-      markets: buildCornerMarkets(totalCorners)
+      markets: buildCornerMarkets(totalCorners),
+      homeMarkets: buildTeamCornerMarkets(homeCorners),
+      awayMarkets: buildTeamCornerMarkets(awayCorners)
     },
 
     yellowCards: {
       home: homeYellow,
       away: awayYellow,
       total: totalYellow,
-      markets: buildCardMarkets(totalYellow)
+      markets: buildCardMarkets(totalYellow),
+      homeMarkets: buildTeamCardMarkets(homeYellow),
+      awayMarkets: buildTeamCardMarkets(awayYellow)
     },
+    
 
     redCard: {
       probability: redProbability
