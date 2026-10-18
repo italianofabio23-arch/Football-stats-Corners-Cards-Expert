@@ -668,6 +668,25 @@ function buildCardMarkets(mean) {
     [2.5, 3.5, 4.5, 5.5]
   );
 }
+
+ // ==========================================
+ // V6 EXPERT - MERCATI SINGOLA SQUADRA
+ // ==========================================
+
+function buildTeamCornerMarkets(mean) {
+  return buildOverMarkets(
+    mean,
+    [3.5, 4.5, 5.5, 6.5]
+  );
+}
+
+function buildTeamCardMarkets(mean) {
+  return buildOverMarkets(
+    mean,
+    [0.5, 1.5, 2.5, 3.5]
+  );
+}
+
 // ==========================================
 // BLOCCO 2 - Utility e gestione interfaccia
 // ==========================================
