@@ -1264,6 +1264,57 @@ ${renderMarketBox(
   match.cornerCardConfidence?.cards
   )}
 ${cornerAntiFalse ? `
+
+${[
+  {
+    type: "corner-home",
+    title: "🚩 Corner Casa",
+    markets: prediction.corners?.homeMarkets?.markets
+  },
+  {
+    type: "corner-away",
+    title: "🚩 Corner Trasferta",
+    markets: prediction.corners?.awayMarkets?.markets
+  },
+  {
+    type: "cards-home",
+    title: "🟨 Cartellini Casa",
+    markets: prediction.yellowCards?.homeMarkets?.markets
+  },
+  {
+    type: "cards-away",
+    title: "🟨 Cartellini Trasferta",
+    markets: prediction.yellowCards?.awayMarkets?.markets
+  }
+].map(({ type, title, markets }) => {
+  const best = getBestHistoryMarket(markets);
+
+  if (!best) return "";
+
+  const result = evaluateAntiFalseTop(
+    type,
+    best.line,
+    best.percent,
+    calculateCornerCardConfidence(prediction, type),
+    match.league || ""
+  );
+
+  return `
+    <div class="market-box">
+      <span>🛡️ Anti-False ${title}</span>
+      <div class="market-value">
+        Over ${best.line}
+        <br>
+        ${escapeHtml(result.label)}
+        <br>
+        <small>
+          📊 ${result.stats?.total || 0} esiti verificati
+        </small>
+      </div>
+    </div>
+  `;
+}).join("")}
+
   <div class="market-box">
     <span>🛡️ Anti-False Corner</span>
 
