@@ -184,7 +184,19 @@ const item = {
   type: selection.type,
   line,
   probability,
-  confidence: selection.confidence,
+  
+confidence: [
+  "corner-home",
+  "corner-away",
+  "cards-home",
+  "cards-away"
+].includes(selection.type)
+  ? calculateCornerCardConfidence(
+      prediction,
+      selection.type
+    )
+  : selection.confidence,
+  
   updatedAt: new Date().toISOString()
 };
 
