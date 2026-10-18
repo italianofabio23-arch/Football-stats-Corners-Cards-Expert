@@ -2814,10 +2814,26 @@ function calculateCornerCardConfidence(prediction, type = "corner") {
 
   const sampleSize = Number(prediction.sampleSize) || 0;
 
-  const markets =
-    type === "cards"
-      ? prediction.yellowCards?.markets?.markets || []
-      : prediction.corners?.markets?.markets || [];
+  
+const marketMap = {
+  corner: prediction.corners?.markets?.markets,
+  cards: prediction.yellowCards?.markets?.markets,
+
+  "corner-home":
+    prediction.corners?.homeMarkets?.markets,
+
+  "corner-away":
+    prediction.corners?.awayMarkets?.markets,
+
+  "cards-home":
+    prediction.yellowCards?.homeMarkets?.markets,
+
+  "cards-away":
+    prediction.yellowCards?.awayMarkets?.markets
+};
+
+const markets = marketMap[type] || [];
+  
 
   const probabilities = markets
     .map((market) => Number(market?.percent))
