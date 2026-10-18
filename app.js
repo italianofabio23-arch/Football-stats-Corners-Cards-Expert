@@ -150,12 +150,16 @@ const item = {
   updatedAt: new Date().toISOString()
 };
 
+
 if (existingIndex >= 0) {
-  history[existingIndex] = {
-    ...history[existingIndex],
-    ...item
-  };
+  if (history[existingIndex].status !== "settled") {
+    history[existingIndex] = {
+      ...history[existingIndex],
+      ...item
+    };
+  }
 } else {
+  
   history.push({
     ...item,
     createdAt: new Date().toISOString(),
