@@ -232,16 +232,57 @@ if (!rows.length) {
   continue;
 }
 
-const statName =
-  item.type === "corner"
-    ? "Corner Kicks"
-    : "Yellow Cards";
 
-const finalValue = rows.reduce(
-  (total, row) =>
-    total + Number(getFixtureStat(row, statName) || 0),
-  0
+const marketTypes = {
+  "corner": ["Corner Kicks", "total"],
+  "cards": ["Yellow Cards", "total"],
+  "corner-home": ["Corner Kicks", "home"],
+  "corner-away": ["Corner Kicks", "away"],
+  "cards-home": ["Yellow Cards", "home"],
+  "cards-away": ["Yellow Cards", "away"]
+};
+
+const config = marketTypes[item.type];
+
+if (!config) continue;
+
+const [statName, side] = config;
+
+const homeId = Number(fixture?.teams?.home?.id);
+const awayId = Number(fixture?.teams?.away?.id);
+
+if (!homeId || !awayId) continue;
+
+const ids =
+  side === "home" ? [homeId] :
+  side === "away" ? [awayId] :
+  [homeId, awayId];
+
+const values = ids.map((id) => {
+  const row = rows.find(
+    (r) => Number(r?.team?.id) === id
+  );
+
+  const stat = (row?.statistics || []).find(
+    (s) => String(s?.type || "").toLowerCase() ===
+      statName.toLowerCase()
+  );
+
+  if (stat?.value == null || stat.value === "") {
+    return NaN;
+  }
+
+  return Number(stat.value);
+});
+
+if (values.some((v) =>
+  !Number.isFinite(v) || v < 0
+)) continue;
+
+const finalValue = values.reduce(
+  (sum, value) => sum + value, 0
 );
+      
 
 item.result = finalValue;
 item.won = finalValue > Number(item.line);
