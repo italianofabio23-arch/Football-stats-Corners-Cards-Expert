@@ -2645,21 +2645,19 @@ function backfillCornerHistoryFromFixture(game, parsed) {
       updatedAt: new Date().toISOString()
     };
 
-    if (existingIndex >= 0) {
-      history[existingIndex] = {
-        ...history[existingIndex],
-        ...settledItem
-      };
-    } else {
-      history.push({
-        id: `backfill-${fixtureId}-corner-${line}`,
-        ...settledItem,
-        createdAt: new Date().toISOString()
-      });
-    }
+    
+if (existingIndex >= 0) {
+  continue;
+}
 
-    changed = true;
-  }
+history.push({
+  id: `backfill-${fixtureId}-corner-${line}`,
+  ...settledItem,
+  createdAt: new Date().toISOString()
+});
+
+changed = true;
+      
 
   if (changed) {
     savePredictionHistory(history);
