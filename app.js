@@ -2657,6 +2657,9 @@ history.push({
 });
 
 changed = true;
+    
+  }
+  
       
 
   if (changed) {
