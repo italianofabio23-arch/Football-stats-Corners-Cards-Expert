@@ -254,21 +254,25 @@ async function updatePredictionHistoryResults() {
     return;
   }
 
-  let changed = false;
+  
+let changed = false;
+const fixtureCache = new Map();
 
-  for (const item of history) {
-    if (
-      item.status === "settled" ||
-      !item.fixtureId
-    ) {
-      continue;
-    }
+for (const item of history) {
+  if (
+    item.status === "settled" ||
+    !item.fixtureId
+  ) {
+    continue;
+  }
 
-    try {
+  try {
+    const cacheKey = String(item.fixtureId);
+    let fixture = fixtureCache.get(cacheKey);
+
+    if (!fixture) {
       const fixtureResponse = await fetch(
-        
-`${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures`,
-        
+        `${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures`,
         { cache: "no-store" }
       );
 
@@ -277,8 +281,15 @@ async function updatePredictionHistoryResults() {
       }
 
       const fixtureData = await fixtureResponse.json();
-      const fixture = fixtureData?.response?.[0];
+      fixture = fixtureData?.response?.[0];
 
+      if (!fixture) {
+        continue;
+      }
+
+      fixtureCache.set(cacheKey, fixture);
+    }
+    
       const status =
         fixture?.fixture?.status?.short || "";
 
