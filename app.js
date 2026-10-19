@@ -1582,6 +1582,20 @@ updatePredictionHistoryResults().catch((error) => {
   const candidates = [];
 
   matches.forEach((match) => {
+    
+const source = match.raw || match;
+
+const kickoff = Date.parse(
+  source?.fixture?.date ||
+  source?.utcDate ||
+  match.date ||
+  ""
+);
+
+if (!Number.isFinite(kickoff) || kickoff <= Date.now()) {
+  return;
+}
+    
     const prediction = match.cornerCardPrediction;
 
     if (!prediction) return;
