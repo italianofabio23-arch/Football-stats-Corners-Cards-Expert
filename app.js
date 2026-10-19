@@ -1289,7 +1289,6 @@ ${renderMarketBox(
   "🎯 Confidence Cartellini",
   match.cornerCardConfidence?.cards
   )}
-${cornerAntiFalse ? `
 
 ${[
   {
