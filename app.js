@@ -287,26 +287,15 @@ if (!["FT", "AET", "PEN"].includes(status)) {
   continue;
 }
 
-const statisticsResponse = await fetch(
-  
-`${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures%2Fstatistics`,
-  
-  { cache: "no-store" }
+
+const rows = await fetchFixtureStatistics(
+  item.fixtureId
 );
 
-if (!statisticsResponse.ok) {
+if (!Array.isArray(rows) || rows.length < 2) {
   continue;
 }
-
-const statisticsData = await statisticsResponse.json();
-
-const rows = Array.isArray(statisticsData?.response)
-  ? statisticsData.response
-  : [];
-
-if (!rows.length) {
-  continue;
-}
+      
 
 
 const marketTypes = {
