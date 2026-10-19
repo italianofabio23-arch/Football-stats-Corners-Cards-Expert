@@ -1341,6 +1341,8 @@ ${[
   `;
 }).join("")}
 
+${cornerAntiFalse ? `
+
   <div class="market-box">
     <span>🛡️ Anti-False Corner</span>
 
