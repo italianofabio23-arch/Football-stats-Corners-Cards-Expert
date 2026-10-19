@@ -470,14 +470,26 @@ function getHistoricalMarketStats(type, line, league = "") {
   };
 
   const allSettled = history
-    .filter((item) => {
-      return (
-        item.status === "settled" &&
-        item.type === type &&
-        Math.abs(Number(item.line) - lineValue) < 0.001 &&
-        typeof item.won === "boolean"
-      );
-    })
+    
+.filter((item) => {
+  const createdAt = Date.parse(item.createdAt || "");
+  const kickoffAt = Date.parse(item.date || "");
+
+  const validPrematch =
+    Number.isFinite(createdAt) &&
+    Number.isFinite(kickoffAt) &&
+    createdAt < kickoffAt;
+
+  return (
+    item.status === "settled" &&
+    item.source !== "historical-backfill" &&
+    validPrematch &&
+    item.type === type &&
+    Math.abs(Number(item.line) - lineValue) < 0.001 &&
+    typeof item.won === "boolean"
+  );
+})
+    
     .sort((a, b) => getTime(b) - getTime(a));
 
   const leagueSettled = normalizedLeague
