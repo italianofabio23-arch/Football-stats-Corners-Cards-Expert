@@ -618,6 +618,17 @@ if (
     probabilityValue < 80 ||
     confidenceValue < 80
   ) {
+    
+if (historyStats.total < 5) {
+  return {
+    isTop: false,
+    status: "waiting",
+    label: `🟡 In attesa esiti ${historyStats.total}/5 • ` +
+      `P ${probabilityLabel}% • C ${confidenceLabel}%`,
+    stats: historyStats
+  };
+}
+    
     return {
       isTop: false,
       status: "almost-top",
