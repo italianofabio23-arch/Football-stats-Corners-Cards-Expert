@@ -1630,6 +1630,55 @@ updatePredictionHistoryResults().catch((error) => {
       }
     });
 
+const teamGroups = [
+  {
+    type: "corner-home",
+    label: `🏠 ${match.home}`,
+    category: "Corner",
+    markets: prediction.corners?.homeMarkets?.markets,
+    lines: [3.5, 4.5, 5.5]
+  },
+  {
+    type: "corner-away",
+    label: `✈️ ${match.away}`,
+    category: "Corner",
+    markets: prediction.corners?.awayMarkets?.markets,
+    lines: [3.5, 4.5, 5.5]
+  },
+  {
+    type: "cards-home",
+    label: `🏠 ${match.home}`,
+    category: "Cartellini",
+    markets: prediction.yellowCards?.homeMarkets?.markets,
+    lines: [1.5, 2.5]
+  },
+  {
+    type: "cards-away",
+    label: `✈️ ${match.away}`,
+    category: "Cartellini",
+    markets: prediction.yellowCards?.awayMarkets?.markets,
+    lines: [1.5, 2.5]
+  }
+];
+
+teamGroups.forEach(({ type, label, category, markets, lines }) => {
+  const confidence = calculateCornerCardConfidence(prediction, type);
+
+  (markets || []).forEach((market) => {
+    const line = Number(market.line);
+    const probability = Number(market.percent);
+
+    if (!lines.includes(line)) return;
+    if (probability < 65 || confidence < 50) return;
+
+    options.push({
+      label: `${label} Over ${line} ${category}`,
+      value: probability,
+      confidence
+    });
+  });
+});
+    
     options.sort((a, b) => {
       const scoreA =
         a.value * 0.65 +
