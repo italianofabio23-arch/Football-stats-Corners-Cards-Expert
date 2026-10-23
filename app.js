@@ -1757,13 +1757,48 @@ teamGroups.forEach(({ type, label, category, markets, lines }) => {
         ${picks.map(({ match, prediction }) => `
           <div class="market-box">
 
-            <span>
-              ${escapeHtml(match.home)}
-              -
-              ${escapeHtml(match.away)}
-              <br>
-              ${escapeHtml(prediction.label)}
-            </span>
+      <div style="width:100%;">
+
+  <div style="
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:12px;
+    align-items:start;
+    margin-bottom:12px;
+  ">
+
+    <div style="
+      min-width:0;
+      text-align:left;
+      overflow-wrap:anywhere;
+    ">
+      <small>🏠 CASA</small>
+      <div style="font-weight:700;">
+        ${escapeHtml(match.home)}
+      </div>
+    </div>
+
+    <div style="
+      min-width:0;
+      text-align:right;
+      overflow-wrap:anywhere;
+    ">
+      <small>✈️ OSPITE</small>
+      <div style="font-weight:700;">
+        ${escapeHtml(match.away)}
+      </div>
+    </div>
+
+  </div>
+
+  <div style="
+    text-align:center;
+    font-weight:600;
+  ">
+    🎯 ${escapeHtml(prediction.label)}
+  </div>
+
+</div>
 
             <div class="market-value">
               ${Math.round(prediction.value)}%
