@@ -1217,18 +1217,18 @@ const cardsAntiFalse = bestCardMarket
         </div>
 
         <div class="market-box">
-          <span>🏠 Corner ${home}</span>
-          <div class="market-value">
-            ${prediction.corners.home}
-          </div>
-        </div>
+  <span>🏠 Corner ${home}</span>
+  <div class="market-value">
+    ${prediction.corners.home}
+  </div>
+</div>
 
-        <div class="market-box">
-          <span>✈️ Corner ${away}</span>
-          <div class="market-value">
-            ${prediction.corners.away}
-          </div>
-        </div>
+<div class="market-box">
+  <span>✈️ Corner ${away}</span>
+  <div class="market-value">
+    ${prediction.corners.away}
+  </div>
+</div>
 
         ${cornerMarkets.map((market) =>
           renderMarketBox(
@@ -1236,7 +1236,19 @@ const cardsAntiFalse = bestCardMarket
             market.percent
           )
         ).join("")}
-        
+        <div style="
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  grid-column:1 / -1;
+  align-items:start;
+">
+  <div style="
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+  ">
 ${(prediction.corners?.homeMarkets?.markets || [])
   .map((market) =>
     renderMarketBox(
@@ -1244,7 +1256,14 @@ ${(prediction.corners?.homeMarkets?.markets || [])
       market.percent
     )
   ).join("")}
+  </div>
 
+  <div style="
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+  ">
 ${(prediction.corners?.awayMarkets?.markets || [])
   .map((market) =>
     renderMarketBox(
@@ -1252,28 +1271,29 @@ ${(prediction.corners?.awayMarkets?.markets || [])
       market.percent
     )
   ).join("")}
-  
+    </div>
+</div>
 
         <div class="market-box">
-          <span>🟨 Gialli previsti</span>
-          <div class="market-value">
-            ${prediction.yellowCards.total}
-          </div>
-        </div>
+  <span>🏠 Gialli ${home}</span>
+  <div class="market-value">
+    ${prediction.yellowCards.home}
+  </div>
+</div>
 
-        <div class="market-box">
-          <span>🏠 Gialli ${home}</span>
-          <div class="market-value">
-            ${prediction.yellowCards.home}
-          </div>
-        </div>
+<div class="market-box">
+  <span>✈️ Gialli ${away}</span>
+  <div class="market-value">
+    ${prediction.yellowCards.away}
+  </div>
+</div>
 
-        <div class="market-box">
-          <span>✈️ Gialli ${away}</span>
-          <div class="market-value">
-            ${prediction.yellowCards.away}
-          </div>
-        </div>
+<div class="market-box" style="grid-column:1 / -1;">
+  <span>🟨 Gialli totali previsti</span>
+  <div class="market-value">
+    ${prediction.yellowCards.total}
+  </div>
+</div>
 
         ${cardMarkets.map((market) =>
           renderMarketBox(
@@ -1281,7 +1301,19 @@ ${(prediction.corners?.awayMarkets?.markets || [])
             market.percent
           )
         ).join("")}
-        
+       <div style="
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  grid-column:1 / -1;
+  align-items:start;
+">
+  <div style="
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+  "> 
 ${(prediction.yellowCards?.homeMarkets?.markets || [])
   .map((market) =>
     renderMarketBox(
@@ -1289,7 +1321,14 @@ ${(prediction.yellowCards?.homeMarkets?.markets || [])
       market.percent
     )
   ).join("")}
+</div>
 
+<div style="
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+">
 ${(prediction.yellowCards?.awayMarkets?.markets || [])
   .map((market) =>
     renderMarketBox(
@@ -1297,7 +1336,8 @@ ${(prediction.yellowCards?.awayMarkets?.markets || [])
       market.percent
     )
   ).join("")}
-  
+  </div>
+</div>
 
         ${renderMarketBox(
           "🟥 Probabilità almeno un rosso",
