@@ -1229,7 +1229,12 @@ const cardsAntiFalse = bestCardMarket
     ${prediction.corners.away}
   </div>
 </div>
-
+<div class="market-box" style="grid-column:1 / -1;">
+  <span>🚩 Corner totali previsti</span>
+  <div class="market-value">
+    ${prediction.corners.total}
+  </div>
+</div>
         ${cornerMarkets.map((market) =>
           renderMarketBox(
             `🚩 Over ${market.line} Corner`,
