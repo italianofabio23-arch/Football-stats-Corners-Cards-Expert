@@ -1619,9 +1619,164 @@ updatePredictionHistoryResults().catch((error) => {
     `${selectedDays === 1 ? "giorno" : "giorni"} • ` +
     `${matches.length} risultati`;
 
-  resultsContainer.innerHTML =
-  renderCornerCardModerateSlip(matches) +
-  matches.map(renderMatchCard).join("");
+    resultsContainer.innerHTML =
+    renderCornerCardAiAgent(matches) +
+    renderCornerCardModerateSlip(matches) +
+    matches.map(renderMatchCard).join("");
+}
+// ==========================================
+// AGENTE IA V6 CORNER & CARDS
+// ==========================================
+
+const CORNER_AI_MODES = {
+  AUTO: "auto",
+  MANUAL: "manual"
+};
+
+const CORNER_AI_BET_TYPES = {
+  SINGLE: "single",
+  DOUBLE: "double"
+};
+
+let cornerAiMode = CORNER_AI_MODES.AUTO;
+let cornerAiBetType = CORNER_AI_BET_TYPES.SINGLE;
+let cornerAiManualSelections = [];
+let cornerAiCandidates = [];
+
+function renderCornerCardAiAgent(matches) {
+    cornerAiCandidates = (matches || []).filter((match) => {
+    const source = match.raw || match;
+
+    const kickoff = Date.parse(
+      source?.fixture?.date ||
+      source?.utcDate ||
+      match.date ||
+      ""
+    );
+
+    return (
+      Number.isFinite(kickoff) &&
+      kickoff > Date.now() &&
+      !!match.cornerCardPrediction
+    );
+  });
+    const aiMarketOptions = [];
+
+  cornerAiCandidates.forEach((match) => {
+    const prediction = match.cornerCardPrediction;
+
+    const cornerConfidence =
+      Number(match.cornerCardConfidence?.corner) || 0;
+
+    const cardConfidence =
+      Number(match.cornerCardConfidence?.cards) || 0;
+
+    const cornerMarkets =
+      prediction.corners?.markets?.markets || [];
+
+    const cardMarkets =
+      prediction.yellowCards?.markets?.markets || [];
+        cornerMarkets.forEach((market) => {
+      const probability = Number(market.percent);
+
+      if (
+        Number.isFinite(probability) &&
+        probability >= 65 &&
+        cornerConfidence >= 50
+      ) {
+        aiMarketOptions.push({
+          match,
+          label: `🚩 Over ${market.line} Corner totali`,
+          probability,
+          confidence: cornerConfidence,
+          score: probability * 0.65 + cornerConfidence * 0.35
+        });
+      }
+    });
+        cardMarkets.forEach((market) => {
+      const probability = Number(market.percent);
+
+      if (
+        Number.isFinite(probability) &&
+        probability >= 65 &&
+        cardConfidence >= 50
+      ) {
+        aiMarketOptions.push({
+          match,
+          label: `🟨 Over ${market.line} Cartellini totali`,
+          probability,
+          confidence: cardConfidence,
+          score: probability * 0.65 + cardConfidence * 0.35
+        });
+      }
+    });
+
+      const teamMarkets = [
+      {
+        type: "corner-home",
+        label: `🏠 ${match.home} Corner`,
+        markets: prediction.corners?.homeMarkets?.markets
+      },
+      {
+        type: "corner-away",
+        label: `✈️ ${match.away} Corner`,
+        markets: prediction.corners?.awayMarkets?.markets
+      },
+      {
+        type: "cards-home",
+        label: `🏠 ${match.home} Cartellini`,
+        markets: prediction.yellowCards?.homeMarkets?.markets
+      },
+      {
+        type: "cards-away",
+        label: `✈️ ${match.away} Cartellini`,
+        markets: prediction.yellowCards?.awayMarkets?.markets
+      }
+    ];
+  window.cornerAiSetMode = function(mode) {
+    cornerAiMode = mode;
+    const agent = document.getElementById("cornerAiAgent");
+    if (agent) agent.outerHTML = renderCornerCardAiAgent(matches);
+  };
+
+  window.cornerAiSetBetType = function(type) {
+    cornerAiBetType = type;
+    const agent = document.getElementById("cornerAiAgent");
+    if (agent) agent.outerHTML = renderCornerCardAiAgent(matches);
+  };
+return `
+    <article class="match-card" id="cornerAiAgent">
+      <div class="teams">
+        🤖 AGENTE IA V6 CORNER & CARDS
+      </div>
+
+      <div class="market-box">
+  <strong>🤖 Modalità Agente IA</strong>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+    <button type="button" id="cornerAiAutoBtn" onclick="cornerAiSetMode('auto')">
+      🤖 AUTOMATICO
+    </button>
+    <button type="button" id="cornerAiManualBtn" onclick="cornerAiSetMode('manual')">
+      ✋ MANUALE
+    </button>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+    <button type="button" id="cornerAiSingleBtn" onclick="cornerAiSetBetType('single')">
+      🎯 SINGOLA
+    </button>
+    <button type="button" id="cornerAiDoubleBtn" onclick="cornerAiSetBetType('double')">
+      🎯 DOPPIA
+    </button>
+  </div>
+</div>
+
+      <div class="market-box">
+        ⏳ Preparazione analisi corner e cartellini...
+      </div>
+    </article>
+  `;
 }
   function renderCornerCardModerateSlip(matches) {
   const candidates = [];
