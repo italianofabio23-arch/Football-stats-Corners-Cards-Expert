@@ -1770,7 +1770,20 @@ if (
     });
 
   });
-    aiMarketOptions.sort((a, b) => b.score - a.score);
+  aiMarketOptions.sort((a, b) => {
+  const scoreDifference = b.score - a.score;
+  if (Math.abs(scoreDifference) > 3) return scoreDifference;
+
+  const getLine = (pick) =>
+    Number(pick.label.match(/Over\s+(\d+(?:\.\d+)?)/)?.[1] || 0);
+
+  const sameMarket =
+    a.label.includes("Corner") === b.label.includes("Corner");
+
+  if (sameMarket) return getLine(b) - getLine(a);
+
+  return scoreDifference;
+});
 
   const aiBestPicks = [];
   const aiUsedMatches = new Set();
