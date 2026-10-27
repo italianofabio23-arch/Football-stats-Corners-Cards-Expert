@@ -1885,6 +1885,11 @@ if (
     const agent = document.getElementById("cornerAiAgent");
     if (agent) agent.outerHTML = renderCornerCardAiAgent(cornerAiCandidates);
   };
+  const aiActiveButtonStyle =
+  "background:#16a34a;color:white;border:2px solid #22c55e;font-weight:bold;";
+
+const aiInactiveButtonStyle =
+  "background:#e5e7eb;color:#374151;border:2px solid #9ca3af;";
 return `
     <article class="match-card" id="cornerAiAgent">
       <div class="teams">
@@ -1895,19 +1900,19 @@ return `
   <strong>🤖 Modalità Agente IA</strong>
 
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-    <button type="button" id="cornerAiAutoBtn" onclick="cornerAiSetMode('auto')">
+    <button type="button" id="cornerAiAutoBtn" style="${cornerAiMode === CORNER_AI_MODES.AUTO ? aiActiveButtonStyle : aiInactiveButtonStyle}"onclick="cornerAiSetMode('auto')">
       🤖 AUTOMATICO
     </button>
-    <button type="button" id="cornerAiManualBtn" onclick="cornerAiSetMode('manual')">
+    <button type="button" id="cornerAiManualBtn" style="${cornerAiMode === CORNER_AI_MODES.MANUAL ? aiActiveButtonStyle : aiInactiveButtonStyle}"onclick="cornerAiSetMode('manual')">
       ✋ MANUALE
     </button>
   </div>
 
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-    <button type="button" id="cornerAiSingleBtn" onclick="cornerAiSetBetType('single')">
+    <button type="button" id="cornerAiSingleBtn"style="${cornerAiBetType === CORNER_AI_BET_TYPES.SINGLE ? aiActiveButtonStyle : aiInactiveButtonStyle}" onclick="cornerAiSetBetType('single')">
       🎯 SINGOLA
     </button>
-    <button type="button" id="cornerAiDoubleBtn" onclick="cornerAiSetBetType('double')">
+    <button type="button" id="cornerAiDoubleBtn"style="${cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE ? aiActiveButtonStyle : aiInactiveButtonStyle}" onclick="cornerAiSetBetType('double')">
       🎯 DOPPIA
     </button>
   </div>
