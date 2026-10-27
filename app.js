@@ -1680,10 +1680,13 @@ function renderCornerCardAiAgent(matches) {
       const probability = Number(market.percent);
 
       if (
-        Number.isFinite(probability) &&
-        probability >= 65 &&
-        cornerConfidence >= 50
-      ) {
+  Number.isFinite(Number(market.line)) &&
+  Number(market.line) >= 7.5 &&
+  Number(market.line) <= 9.5 &&
+  Number.isFinite(probability) &&
+  probability >= 65 &&
+  cornerConfidence >= 50
+) {
         aiMarketOptions.push({
           match,
           label: `🚩 Over ${market.line} Corner totali`,
@@ -1697,10 +1700,13 @@ function renderCornerCardAiAgent(matches) {
       const probability = Number(market.percent);
 
       if (
-        Number.isFinite(probability) &&
-        probability >= 65 &&
-        cardConfidence >= 50
-      ) {
+  Number.isFinite(Number(market.line)) &&
+  Number(market.line) >= 2.5 &&
+  Number(market.line) <= 4.5 &&
+  Number.isFinite(probability) &&
+  probability >= 65 &&
+  cardConfidence >= 50
+) {
         aiMarketOptions.push({
           match,
           label: `🟨 Over ${market.line} Cartellini totali`,
@@ -1741,12 +1747,17 @@ function renderCornerCardAiAgent(matches) {
         const line = Number(market.line);
         const probability = Number(market.percent);
 
-        if (
-          !Number.isFinite(line) ||
-          !Number.isFinite(probability) ||
-          probability < 65 ||
-          confidence < 50
-        ) return;
+     const minLine = type.startsWith("corner") ? 3.5 : 1.5;
+const maxLine = type.startsWith("corner") ? 5.5 : 2.5;
+
+if (
+  !Number.isFinite(line) ||
+  !Number.isFinite(probability) ||
+  line < minLine ||
+  line > maxLine ||
+  probability < 65 ||
+  confidence < 50
+) return;
 
         aiMarketOptions.push({
           match,
