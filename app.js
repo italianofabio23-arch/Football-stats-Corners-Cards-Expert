@@ -1771,18 +1771,29 @@ if (
 
   });
   aiMarketOptions.sort((a, b) => {
-  const scoreDifference = b.score - a.score;
-  if (Math.abs(scoreDifference) > 3) return scoreDifference;
-
   const getLine = (pick) =>
     Number(pick.label.match(/Over\s+(\d+(?:\.\d+)?)/)?.[1] || 0);
 
-  const sameMarket =
-    a.label.includes("Corner") === b.label.includes("Corner");
+  const getCategory = (pick) =>
+    pick.label.includes("Corner") ? "corner" : "cards";
 
-  if (sameMarket) return getLine(b) - getLine(a);
+  const getBalancedScore = (pick) => {
+    const line = getLine(pick);
+    const category = getCategory(pick);
 
-  return scoreDifference;
+    const baseLine = category === "corner"
+      ? (pick.label.includes("totali") ? 7.5 : 3.5)
+      : (pick.label.includes("totali") ? 2.5 : 1.5);
+
+    const lineBonus = Math.max(
+      0,
+      Math.min(2, line - baseLine)
+    );
+
+    return pick.score + lineBonus;
+  };
+
+  return getBalancedScore(b) - getBalancedScore(a);
 });
 
   const aiBestPicks = [];
