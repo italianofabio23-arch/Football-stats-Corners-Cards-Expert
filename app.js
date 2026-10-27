@@ -1842,13 +1842,13 @@ function renderCornerCardAiAgent(matches) {
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
     const agent = document.getElementById("cornerAiAgent");
-    if (agent) agent.outerHTML = renderCornerCardAiAgent(matches);
+    if (agent) agent.outerHTML = renderCornerCardAiAgent(cornerAiCandidates);
   };
 
   window.cornerAiSetBetType = function(type) {
     cornerAiBetType = type;
     const agent = document.getElementById("cornerAiAgent");
-    if (agent) agent.outerHTML = renderCornerCardAiAgent(matches);
+    if (agent) agent.outerHTML = renderCornerCardAiAgent(cornerAiCandidates);
   };
 return `
     <article class="match-card" id="cornerAiAgent">
