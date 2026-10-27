@@ -1886,7 +1886,7 @@ if (
     if (agent) agent.outerHTML = renderCornerCardAiAgent(cornerAiCandidates);
   };
   const aiActiveButtonStyle =
-  "background:#16a34a;color:white;border:2px solid #22c55e;font-weight:bold;";
+  "background:#16a34a !important;color:white !important;border:2px solid #22c55e !important;font-weight:bold;";
 
 const aiInactiveButtonStyle =
   "background:#e5e7eb;color:#374151;border:2px solid #9ca3af;";
