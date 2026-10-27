@@ -1753,10 +1753,21 @@ teamGroups.forEach(({ type, label, category, markets, lines }) => {
     if (options.length) {
       candidates.push({
         match,
-        prediction: options[0],
-        score:
-          options[0].value * 0.65 +
-          options[0].confidence * 0.35
+        prediction: options.find(option =>
+  !candidates.some(candidate =>
+    candidate.prediction.label === option.label
+  )
+) || options[0],
+      score: (() => {
+  const selected = options.find(option =>
+    !candidates.some(candidate =>
+      candidate.prediction.label === option.label
+    )
+  ) || options[0];
+
+  return selected.value * 0.65 +
+         selected.confidence * 0.35;
+})()
       });
     }
   });
