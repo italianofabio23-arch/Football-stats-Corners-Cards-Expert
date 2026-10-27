@@ -1780,10 +1780,52 @@ function renderCornerCardAiAgent(matches) {
     aiBestPicks.push(option);
   });
 
-  const aiSelectedPicks = aiBestPicks.slice(
-    0,
-    cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE ? 2 : 1
-  );
+    const aiPickLimit =
+    cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE ? 2 : 1;
+
+  const aiSelectedPicks =
+    cornerAiMode === CORNER_AI_MODES.MANUAL
+      ? aiBestPicks
+          .filter((pick) =>
+            cornerAiManualSelections.includes(
+              `${pick.match.home}|${pick.match.away}|${pick.match.date || ""}`
+            )
+          )
+          .slice(0, aiPickLimit)
+      : aiBestPicks.slice(0, aiPickLimit);
+    const aiManualOptionsHtml = aiBestPicks.map((pick) => {
+    const key = `${pick.match.home}|${pick.match.away}|${pick.match.date || ""}`;
+    const checked = cornerAiManualSelections.includes(key);
+
+    return `
+      <label style="display:block;margin:8px 0">
+        <input type="checkbox"
+  data-corner-ai-key="${encodeURIComponent(key)}"
+  onchange="window.cornerAiToggleManualPick(this.dataset.cornerAiKey, this.checked)"
+  ${checked ? "checked" : ""}>
+        ⚽ ${pick.match.home} - ${pick.match.away}
+        | ${pick.label}
+        | ${pick.probability.toFixed(1)}%
+      </label>
+    `;
+  }).join("");
+    window.cornerAiToggleManualPick = function(encodedKey, checked) {
+    const key = decodeURIComponent(encodedKey);
+
+    if (checked) {
+      if (!cornerAiManualSelections.includes(key)) {
+        cornerAiManualSelections.push(key);
+      }
+    } else {
+      cornerAiManualSelections =
+        cornerAiManualSelections.filter(item => item !== key);
+    }
+
+    const agent = document.getElementById("cornerAiAgent");
+    if (agent) {
+      agent.outerHTML = renderCornerCardAiAgent(cornerAiCandidates);
+    }
+  };
     const aiPicksHtml = aiSelectedPicks.length
     ? aiSelectedPicks.map((pick) => `
         <div class="market-box">
@@ -1837,8 +1879,22 @@ return `
 </div>
 
       <div class="market-box">
-        ⏳ Preparazione analisi corner e cartellini...
-      </div>
+  <strong>
+    ${cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE
+      ? "🎯 DOPPIA IA"
+      : "🎯 SINGOLA IA"}
+  </strong>
+</div>
+${cornerAiMode === CORNER_AI_MODES.MANUAL
+  ? `
+    <div class="market-box">
+      <strong>✋ Seleziona le partite manualmente</strong>
+      <p>Scegli le partite per la tua Singola o Doppia.</p>
+      ${aiManualOptionsHtml || "<p>Nessuna partita disponibile.</p>"}
+    </div>
+  `
+  : ""}
+${aiPicksHtml}
     </article>
   `;
 }
