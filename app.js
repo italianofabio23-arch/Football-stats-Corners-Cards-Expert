@@ -1733,6 +1733,70 @@ function renderCornerCardAiAgent(matches) {
         markets: prediction.yellowCards?.awayMarkets?.markets
       }
     ];
+        teamMarkets.forEach(({ type, label, markets }) => {
+      const confidence =
+        calculateCornerCardConfidence(prediction, type);
+
+      (markets || []).forEach((market) => {
+        const line = Number(market.line);
+        const probability = Number(market.percent);
+
+        if (
+          !Number.isFinite(line) ||
+          !Number.isFinite(probability) ||
+          probability < 65 ||
+          confidence < 50
+        ) return;
+
+        aiMarketOptions.push({
+          match,
+          label: `${label} Over ${line}`,
+          probability,
+          confidence,
+          score: probability * 0.65 + confidence * 0.35
+        });
+      });
+    });
+
+  });
+    aiMarketOptions.sort((a, b) => b.score - a.score);
+
+  const aiBestPicks = [];
+  const aiUsedMatches = new Set();
+
+  aiMarketOptions.forEach((option) => {
+    const match = option.match;
+    const matchKey = `${match.home}|${match.away}|${match.date || ""}`;
+
+    if (aiUsedMatches.has(matchKey)) return;
+
+    if (
+      option.probability < 68 ||
+      option.confidence < 55 ||
+      option.score < 65
+    ) return;
+
+    aiUsedMatches.add(matchKey);
+    aiBestPicks.push(option);
+  });
+
+  const aiSelectedPicks = aiBestPicks.slice(
+    0,
+    cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE ? 2 : 1
+  );
+    const aiPicksHtml = aiSelectedPicks.length
+    ? aiSelectedPicks.map((pick) => `
+        <div class="market-box">
+          <strong>⚽ ${pick.match.home} - ${pick.match.away}</strong>
+          <p>🎯 ${pick.label}</p>
+          <p>📊 Probabilità: ${pick.probability.toFixed(1)}%</p>
+          <p>🛡️ Confidence: ${pick.confidence.toFixed(1)}%</p>
+          <p>⭐ Score IA: ${pick.score.toFixed(1)}%</p>
+        </div>
+      `).join("")
+        : `<div class="market-box">
+         ⚠️ Nessun pronostico supera i filtri IA.
+       </div>`;
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
     const agent = document.getElementById("cornerAiAgent");
