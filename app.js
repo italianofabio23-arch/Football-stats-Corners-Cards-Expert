@@ -1869,11 +1869,40 @@ if (
           <p>📊 Probabilità: ${pick.probability.toFixed(1)}%</p>
           <p>🛡️ Confidence: ${pick.confidence.toFixed(1)}%</p>
           <p>⭐ Score IA: ${pick.score.toFixed(1)}%</p>
+          <p>💰 Quota equa IA: ${(100 / pick.probability).toFixed(2)}</p>
+          <p>🏦 Quota bookmaker: <input type="number" min="1.01" step="0.01" placeholder="Es. 1.35" style="width:110px;padding:6px;border-radius:6px;" oninput="window.cornerAiCheckValue(this)"></p>
+          <p class="corner-ai-value-result" data-probability="${pick.probability}">📊 Inserisci la quota per valutare la convenienza.</p>
         </div>
       `).join("")
         : `<div class="market-box">
          ⚠️ Nessun pronostico supera i filtri IA.
        </div>`;
+  window.cornerAiCheckValue = function(input) {
+  const quota = Number(input.value);
+  const result = input.closest(".market-box")
+    ?.querySelector(".corner-ai-value-result");
+
+  if (!result) return;
+
+  const probability = Number(result.dataset.probability);
+
+  if (!Number.isFinite(quota) || quota <= 1 ||
+      !Number.isFinite(probability) || probability <= 0) {
+    result.textContent = "📊 Inserisci una quota valida.";
+    return;
+  }
+
+  const fairOdds = 100 / probability;
+  const value = ((quota / fairOdds) - 1) * 100;
+
+  if (value >= 5) {
+    result.textContent = `🟢 VALUE BET +${value.toFixed(1)}%`;
+  } else if (value > 0) {
+    result.textContent = `🟡 Piccolo vantaggio +${value.toFixed(1)}%`;
+  } else {
+    result.textContent = `🔴 Quota non conveniente ${value.toFixed(1)}%`;
+  }
+};
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
     const agent = document.getElementById("cornerAiAgent");
