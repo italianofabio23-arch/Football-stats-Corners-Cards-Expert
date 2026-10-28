@@ -1903,6 +1903,42 @@ if (
     result.textContent = `🔴 Quota non conveniente ${value.toFixed(1)}%`;
   }
 };
+  window.cornerAiUpdateCombinedValue = function() {
+  const agent = document.getElementById("cornerAiAgent");
+  if (!agent) return;
+
+  const inputs = [...agent.querySelectorAll(
+    ".corner-ai-bookmaker-odd"
+  )];
+
+  const odds = inputs.map(input => Number(input.value));
+
+  const bookmaker = document.getElementById(
+    "cornerAiCombinedBookmaker"
+  );
+  const valueResult = document.getElementById(
+    "cornerAiCombinedValue"
+  );
+
+  if (!bookmaker || !valueResult) return;
+
+  if (odds.length !== 2 || odds.some(q => !Number.isFinite(q) || q <= 1)) {
+    bookmaker.textContent = "--";
+    valueResult.textContent = "Inserisci le due quote";
+    return;
+  }
+
+  const combinedOdds = odds[0] * odds[1];
+  const fairOdds = 100 / (
+  Number(inputs[0].dataset.probability) *
+  Number(inputs[1].dataset.probability) / 100
+);
+  const value = (combinedOdds / fairOdds - 1) * 100;
+
+  bookmaker.textContent = combinedOdds.toFixed(2);
+  valueResult.textContent =
+    `${value >= 5 ? "🟢 VALUE BET" : value > 0 ? "🟡 Piccolo vantaggio" : "🔴 Non conveniente"} ${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+};
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
     const agent = document.getElementById("cornerAiAgent");
@@ -1987,6 +2023,12 @@ ${cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE &&
         <p>💰 Quota equa combinata:
           ${aiCombinedFairOdds.toFixed(2)}
         </p>
+        <p>🏦 Quota bookmaker combinata:
+  <strong id="cornerAiCombinedBookmaker">--</strong>
+</p>
+<p>📈 Value Bet doppia:
+  <strong id="cornerAiCombinedValue">Inserisci le due quote</strong>
+</p>
         <p style="font-size:12px;opacity:0.8;">
           Stima basata sull'indipendenza dei due eventi.
         </p>
