@@ -1818,27 +1818,13 @@ aiMarketOptions.push({
     if (aiUsedMatches.has(matchKey)) return;
 
 
-    
+  
 if (
-  !Number.isFinite(option.probability) ||
-  !Number.isFinite(option.confidence) ||
-  !Number.isFinite(option.score) ||
-  option.probability < 78 ||
-  option.confidence < 70 ||
-  option.score < 75
+  option.probability < 68 ||
+  option.confidence < 55 ||
+  option.score < 65
 ) return;
     
-    
-
-const antiFalse = evaluateAntiFalseTop(
-  option.type,
-  option.line,
-  option.probability,
-  option.confidence,
-  match.league?.name || match.league || ""
-);
-
-if (!antiFalse.isTop) return;
       
     aiUsedMatches.add(matchKey);
     aiBestPicks.push(option);
