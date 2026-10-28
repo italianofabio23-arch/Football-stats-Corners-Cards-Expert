@@ -1929,11 +1929,21 @@ if (
   }
 
   const combinedOdds = odds[0] * odds[1];
-  const fairOdds = 100 / (
-  Number(inputs[0].dataset.probability) *
-  Number(inputs[1].dataset.probability) / 100
-);
-  const value = (combinedOdds / fairOdds - 1) * 100;
+  const probabilities = [...agent.querySelectorAll(
+  ".corner-ai-value-result"
+)].map(el => Number(el.dataset.probability));
+
+const combinedProbability =
+  probabilities[0] * probabilities[1] / 100;
+
+const fairOdds =
+  combinedProbability > 0
+    ? 100 / combinedProbability
+    : 0;
+  const value =
+  fairOdds > 0 && Number.isFinite(fairOdds)
+    ? (combinedOdds / fairOdds - 1) * 100
+    : 0;
 
   bookmaker.textContent = combinedOdds.toFixed(2);
   valueResult.textContent =
