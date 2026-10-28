@@ -1687,13 +1687,17 @@ function renderCornerCardAiAgent(matches) {
   probability >= 65 &&
   cornerConfidence >= 50
 ) {
-        aiMarketOptions.push({
-          match,
-          label: `🚩 Over ${market.line} Corner totali`,
-          probability,
-          confidence: cornerConfidence,
-          score: probability * 0.65 + cornerConfidence * 0.35
-        });
+      
+aiMarketOptions.push({
+  match,
+  type: "corner",
+  line: Number(market.line),
+  label: `🚩 Over ${market.line} Corner totali`,
+  probability,
+  confidence: cornerConfidence,
+  score: probability * 0.65 + cornerConfidence * 0.35
+});
+        
       }
     });
         cardMarkets.forEach((market) => {
@@ -1707,13 +1711,17 @@ function renderCornerCardAiAgent(matches) {
   probability >= 65 &&
   cardConfidence >= 50
 ) {
-        aiMarketOptions.push({
-          match,
-          label: `🟨 Over ${market.line} Cartellini totali`,
-          probability,
-          confidence: cardConfidence,
-          score: probability * 0.65 + cardConfidence * 0.35
-        });
+        
+aiMarketOptions.push({
+  match,
+  type: "cards",
+  line: Number(market.line),
+  label: `🟨 Over ${market.line} Cartellini totali`,
+  probability,
+  confidence: cardConfidence,
+  score: probability * 0.65 + cardConfidence * 0.35
+});
+        
       }
     });
 
@@ -1759,13 +1767,17 @@ if (
   confidence < 50
 ) return;
 
-        aiMarketOptions.push({
-          match,
-          label: `${label} Over ${line}`,
-          probability,
-          confidence,
-          score: probability * 0.65 + confidence * 0.35
-        });
+        
+aiMarketOptions.push({
+  match,
+  type,
+  line,
+  label: `${label} Over ${line}`,
+  probability,
+  confidence,
+  score: probability * 0.65 + confidence * 0.35
+});
+        
       });
     });
 
@@ -1816,6 +1828,16 @@ if (
 ) return;
     
 
+const antiFalse = evaluateAntiFalseTop(
+  option.type,
+  option.line,
+  option.probability,
+  option.confidence,
+  match.league?.name || match.league || ""
+);
+
+if (!antiFalse.isTop) return;
+      
     aiUsedMatches.add(matchKey);
     aiBestPicks.push(option);
   });
