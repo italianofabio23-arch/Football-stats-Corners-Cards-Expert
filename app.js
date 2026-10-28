@@ -1870,7 +1870,7 @@ if (
           <p>🛡️ Confidence: ${pick.confidence.toFixed(1)}%</p>
           <p>⭐ Score IA: ${pick.score.toFixed(1)}%</p>
           <p>💰 Quota equa IA: ${(100 / pick.probability).toFixed(2)}</p>
-          <p>🏦 Quota bookmaker: <input type="number" min="1.01" step="0.01" placeholder="Es. 1.35" style="width:110px;padding:6px;border-radius:6px;"oninput="window.cornerAiCheckValue(this); window.cornerAiUpdateCombinedValue()" "></p>
+          <p>🏦 Quota bookmaker: <<input type="number" class="corner-ai-bookmaker-odd" min="1.01" step="0.01" placeholder="Es. 1.35" style="width:110px;padding:6px;border-radius:6px;"oninput="window.cornerAiCheckValue(this); window.cornerAiUpdateCombinedValue()" "></p>
           <p class="corner-ai-value-result" data-probability="${pick.probability}">📊 Inserisci la quota per valutare la convenienza.</p>
         </div>
       `).join("")
