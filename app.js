@@ -1946,8 +1946,13 @@ const fairOdds =
     : 0;
 
   bookmaker.textContent = combinedOdds.toFixed(2);
-  valueResult.textContent =
-    `${value >= 5 ? "🟢 VALUE BET" : value > 0 ? "🟡 Piccolo vantaggio" : "🔴 Non conveniente"} ${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+  
+const valuePercent = combinedOdds * combinedProbability - 100;
+
+valueResult.textContent = Number.isFinite(valuePercent)
+  ? `${valuePercent >= 5 ? "🟢 VALUE BET" : valuePercent > 0 ? "🟡 Valore basso" : "🔴 Non conveniente"} ${valuePercent >= 0 ? "+" : ""}${valuePercent.toFixed(1)}%`
+  : "⚠️ Impossibile calcolare la Value Bet";
+    
 };
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
