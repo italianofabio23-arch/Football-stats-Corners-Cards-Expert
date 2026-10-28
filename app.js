@@ -1805,11 +1805,16 @@ if (
 
     if (aiUsedMatches.has(matchKey)) return;
 
-    if (
-      option.probability < 68 ||
-      option.confidence < 55 ||
-      option.score < 65
-    ) return;
+    
+if (
+  !Number.isFinite(option.probability) ||
+  !Number.isFinite(option.confidence) ||
+  !Number.isFinite(option.score) ||
+  option.probability < 85 ||
+  option.confidence < 80 ||
+  option.score < 82
+) return;
+    
 
     aiUsedMatches.add(matchKey);
     aiBestPicks.push(option);
