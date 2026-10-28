@@ -1817,15 +1817,17 @@ aiMarketOptions.push({
 
     if (aiUsedMatches.has(matchKey)) return;
 
+
     
 if (
   !Number.isFinite(option.probability) ||
   !Number.isFinite(option.confidence) ||
   !Number.isFinite(option.score) ||
-  option.probability < 85 ||
-  option.confidence < 80 ||
-  option.score < 82
+  option.probability < 78 ||
+  option.confidence < 70 ||
+  option.score < 75
 ) return;
+    
     
 
 const antiFalse = evaluateAntiFalseTop(
