@@ -1919,6 +1919,18 @@ if (
 
 const aiInactiveButtonStyle =
   "background:#e5e7eb;color:#374151;border:2px solid #9ca3af;";
+  const aiCombinedProbability =
+  aiSelectedPicks.length === 2
+    ? aiSelectedPicks.reduce(
+        (total, pick) => total * (pick.probability / 100),
+        1
+      ) * 100
+    : 0;
+
+const aiCombinedFairOdds =
+  aiCombinedProbability > 0
+    ? 100 / aiCombinedProbability
+    : 0;
 return `
     <article class="match-card" id="cornerAiAgent">
       <div class="teams">
@@ -1964,6 +1976,23 @@ ${cornerAiMode === CORNER_AI_MODES.MANUAL
   `
   : ""}
 ${aiPicksHtml}
+${cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE &&
+  aiSelectedPicks.length === 2
+    ? `
+      <div class="market-box">
+        <strong>📊 RIEPILOGO DOPPIA IA</strong>
+        <p>🎯 Probabilità combinata:
+          ${aiCombinedProbability.toFixed(1)}%
+        </p>
+        <p>💰 Quota equa combinata:
+          ${aiCombinedFairOdds.toFixed(2)}
+        </p>
+        <p style="font-size:12px;opacity:0.8;">
+          Stima basata sull'indipendenza dei due eventi.
+        </p>
+      </div>
+    `
+    : ""}
     </article>
   `;
 }
