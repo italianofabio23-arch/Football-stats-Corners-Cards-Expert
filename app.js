@@ -1695,7 +1695,9 @@ aiMarketOptions.push({
   label: `🚩 Over ${market.line} Corner totali`,
   probability,
   confidence: cornerConfidence,
-  score: probability * 0.65 + cornerConfidence * 0.35
+  
+score: probability * 0.65 + cornerConfidence * 0.35 - (cornerConfidence < 70 ? 3 : 0),
+  
 });
         
       }
