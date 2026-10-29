@@ -1801,7 +1801,13 @@ aiMarketOptions.push({
 
     
 
-    return pick.score;
+  const extraLine = Number.isFinite(line)
+  ? Math.max(0, line - baseline)
+  : 0;
+
+const difficultyPenalty = Math.min(8, extraLine * 2);
+
+return pick.score - difficultyPenalty;
   };
 
   return getBalancedScore(b) - getBalancedScore(a);
