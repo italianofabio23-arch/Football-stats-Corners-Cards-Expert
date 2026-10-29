@@ -1797,12 +1797,9 @@ aiMarketOptions.push({
       ? (pick.label.includes("totali") ? 7.5 : 3.5)
       : (pick.label.includes("totali") ? 2.5 : 1.5);
 
-    const lineBonus = Math.max(
-      0,
-      Math.min(2, line - baseLine)
-    );
+    
 
-    return pick.score + lineBonus;
+    return pick.score;
   };
 
   return getBalancedScore(b) - getBalancedScore(a);
@@ -1818,11 +1815,11 @@ aiMarketOptions.push({
     if (aiUsedMatches.has(matchKey)) return;
 
 
-  
-if (
-  option.probability < 68 ||
-  option.confidence < 55 ||
-  option.score < 65
+
+    if (
+  option.probability < 72 ||
+  option.confidence < 60 ||
+  option.score < 68
 ) return;
     
       
