@@ -1721,7 +1721,7 @@ aiMarketOptions.push({
   label: `🟨 Over ${market.line} Cartellini totali`,
   probability,
   confidence: cardConfidence,
-  score: probability * 0.65 + cardConfidence * 0.35
+  score: probability * 0.65 + cardConfidence * 0.35 - (cardConfidence < 70 ? 3 : 0),
 });
         
       }
