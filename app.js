@@ -1802,7 +1802,7 @@ aiMarketOptions.push({
     
 
   const extraLine = Number.isFinite(line)
-  ? Math.max(0, line - baseline)
+  ? Math.max(0, line - baseLine)
   : 0;
 
 const difficultyPenalty = Math.min(8, extraLine * 2);
