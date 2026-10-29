@@ -3567,7 +3567,9 @@ const markets = marketMap[type] || [];
     sampleScore * 0.30;
 
   if (sampleSize < 5) {
-    confidence -= 10;
+  confidence -= 15;
+} else if (sampleSize < 8) {
+  confidence -= 5;
   }
 
   return Math.max(
