@@ -2429,6 +2429,7 @@ function selectHighOddsCornerCardPicks(matches) {
         if (!best || score > best.score) {
           best = {
             match,
+type: group.type,
             label: `${group.label} Over ${line}`,
             probability,
             confidence,
@@ -2441,9 +2442,31 @@ function selectHighOddsCornerCardPicks(matches) {
     if (best) candidates.push(best);
   }
 
-  return candidates
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
+  
+const sorted = candidates.sort(
+  (a, b) => b.score - a.score
+);
+
+const cards = sorted
+  .filter(pick => pick.type.startsWith("cards"))
+  .slice(0, 2);
+
+const corners = sorted
+  .filter(pick => pick.type.startsWith("corner"))
+  .slice(0, 2);
+
+const selected = [...cards, ...corners];
+
+for (const pick of sorted) {
+  if (selected.length >= 6) break;
+
+  if (!selected.includes(pick)) {
+    selected.push(pick);
+  }
+}
+
+return selected.slice(0, 6);
+  
             }
 
 function renderHighOddsCornerCardSlip(matches) {
