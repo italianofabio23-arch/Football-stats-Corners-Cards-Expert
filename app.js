@@ -2443,6 +2443,80 @@ function selectHighOddsCornerCardPicks(matches) {
     .slice(0, 6);
             }
 
+function renderHighOddsCornerCardSlip(matches) {
+  const picks = selectHighOddsCornerCardPicks(matches);
+
+  if (picks.length < 5) {
+    return `
+      <article class="match-card">
+        <div class="teams">
+          🔥 COMBO ALTA QUOTA CORNER & CARDS
+        </div>
+        <div class="market-box">
+          ⚠️ Solo ${picks.length}/5 partite idonee.
+          Nessuna selezione forzata.
+        </div>
+      </article>
+    `;
+  }
+
+  const combinedProbability = picks.reduce(
+    (total, pick) =>
+      total * (pick.probability / 100),
+    1
+  );
+
+  const fairOdds = combinedProbability > 0
+    ? 1 / combinedProbability
+    : 0;
+
+  return `
+    <article class="match-card">
+      <div class="teams">
+        🔥 COMBO ALTA QUOTA CORNER & CARDS
+      </div>
+
+      <div class="market-box">
+        ⚠️ RISCHIO ALTO • Stime statistiche
+      </div>
+
+      <div class="market-grid">
+        ${picks.map((pick) => `
+          <div class="market-box">
+            <strong>
+              ${escapeHtml(pick.match.home)} -
+              ${escapeHtml(pick.match.away)}
+            </strong>
+            <p>${escapeHtml(pick.label)}</p>
+            <div class="market-value">
+              ${clampPercent(pick.probability)}%
+            </div>
+            <small>
+              Confidence: ${clampPercent(pick.confidence)}%
+              | IA: ${pick.score.toFixed(0)}/100
+            </small>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="market-box">
+        Selezioni disponibili: ${picks.length}/6
+        <br>
+        Probabilità combinata teorica:
+        ${(combinedProbability * 100).toFixed(1)}%
+        <br>
+        Quota equa teorica:
+        ${fairOdds.toFixed(2)}
+        <br>
+        <small>
+          Stime del modello, ipotizzando
+          eventi indipendenti.
+        </small>
+      </div>
+    </article>
+  `;
+}
+
 function renderTop80Slip(matches) {
   const picks = matches
     .map((match) => ({
