@@ -2341,6 +2341,108 @@ teamGroups.forEach(({ type, label, category, markets, lines }) => {
   `;
   }
     
+function selectHighOddsCornerCardPicks(matches) {
+  const candidates = [];
+
+  for (const match of matches) {
+    const prediction = match.cornerCardPrediction;
+
+    if (!prediction ||
+        !(Number(prediction.sampleSize) >= 6)) continue;
+
+    const source = match.raw || match;
+    const kickoff = Date.parse(
+      source?.fixture?.date ||
+      source?.utcDate ||
+      match.date ||
+      ""
+    );
+
+    if (!Number.isFinite(kickoff) ||
+        kickoff <= Date.now()) continue;
+
+    const groups = [
+      {
+        label: "🚩 Corner totali",
+        type: "corner",
+        markets: prediction.corners?.markets?.markets,
+        minLine: 8.5
+      },
+      {
+        label: "🟨 Cartellini totali",
+        type: "cards",
+        markets: prediction.yellowCards?.markets?.markets,
+        minLine: 3.5
+      },
+      {
+        label: `🏠 ${match.home} Corner`,
+        type: "corner-home",
+        markets: prediction.corners?.homeMarkets?.markets,
+        minLine: 3.5
+      },
+      {
+        label: `✈️ ${match.away} Corner`,
+        type: "corner-away",
+        markets: prediction.corners?.awayMarkets?.markets,
+        minLine: 3.5
+      },
+      {
+        label: `🏠 ${match.home} Cartellini`,
+        type: "cards-home",
+        markets: prediction.yellowCards?.homeMarkets?.markets,
+        minLine: 1.5
+      },
+      {
+        label: `✈️ ${match.away} Cartellini`,
+        type: "cards-away",
+        markets: prediction.yellowCards?.awayMarkets?.markets,
+        minLine: 1.5
+      }
+    ];
+
+    let best = null;
+
+    for (const group of groups) {
+      const confidence =
+        calculateCornerCardConfidence(prediction, group.type);
+
+      if (confidence < 65) continue;
+
+      for (const market of group.markets || []) {
+        const line = Number(market.line);
+        const probability = Number(market.percent);
+
+        if (!Number.isFinite(line) ||
+            !Number.isFinite(probability) ||
+            line < group.minLine ||
+            probability < 50 ||
+            probability > 74) continue;
+
+        const score =
+          probability * 0.55 +
+          confidence * 0.45 +
+          Math.min(4, (line - group.minLine) * 2);
+
+        if (!best || score > best.score) {
+          best = {
+            match,
+            label: `${group.label} Over ${line}`,
+            probability,
+            confidence,
+            score
+          };
+        }
+      }
+    }
+
+    if (best) candidates.push(best);
+  }
+
+  return candidates
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+            }
+
 function renderTop80Slip(matches) {
   const picks = matches
     .map((match) => ({
