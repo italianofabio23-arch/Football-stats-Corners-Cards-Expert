@@ -1619,10 +1619,13 @@ updatePredictionHistoryResults().catch((error) => {
     `${selectedDays === 1 ? "giorno" : "giorni"} • ` +
     `${matches.length} risultati`;
 
-    resultsContainer.innerHTML =
-    renderCornerCardAiAgent(matches) +
-    renderCornerCardModerateSlip(matches) +
-    matches.map(renderMatchCard).join("");
+    
+resultsContainer.innerHTML =
+  renderCornerCardAiAgent(matches) +
+  renderCornerCardModerateSlip(matches) +
+  renderHighOddsCornerCardSlip(matches) +
+  matches.map(renderMatchCard).join("");
+  
 }
 // ==========================================
 // AGENTE IA V6 CORNER & CARDS
