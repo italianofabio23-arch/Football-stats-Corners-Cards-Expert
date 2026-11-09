@@ -1626,6 +1626,66 @@ resultsContainer.innerHTML =
   renderHighOddsCornerCardSlip(matches) +
   matches.map(renderMatchCard).join("");
   
+  // V6 STUDIO TV - Esporta corner e cartellini
+  try {
+    const studioMatches = matches.map(match => {
+      const p = match.cornerCardPrediction;
+
+      const groups = [
+        ["corners", "cornerTotal", "Corner totali",
+          p?.corners?.markets?.markets, "corner"],
+        ["corners", "cornerHome", "Corner casa",
+          p?.corners?.homeMarkets?.markets, "corner-home"],
+        ["corners", "cornerAway", "Corner ospite",
+          p?.corners?.awayMarkets?.markets, "corner-away"],
+        ["cards", "cardsTotal", "Cartellini totali",
+          p?.yellowCards?.markets?.markets, "cards"],
+        ["cards", "cardsHome", "Cartellini casa",
+          p?.yellowCards?.homeMarkets?.markets, "cards-home"],
+        ["cards", "cardsAway", "Cartellini ospite",
+          p?.yellowCards?.awayMarkets?.markets, "cards-away"]
+      ];
+
+      return {
+        home: match.home,
+        away: match.away,
+        date: String(match.date || "").slice(0, 10),
+        league: String(match.league || ""),
+        markets: groups.flatMap(
+          ([category, key, title, items, type]) =>
+            (Array.isArray(items) ? items : [])
+              .filter(m =>
+                Number.isFinite(Number(m?.line)) &&
+                Number.isFinite(Number(m?.percent)) &&
+                Number(m.percent) >= 1 &&
+                Number(m.percent) <= 100
+              )
+              .slice(0, 6)
+              .map(m => ({
+                category,
+                key,
+                label: `${title} Over ${m.line}`,
+                probability: Number(m.percent),
+                confidence: calculateCornerCardConfidence(p, type),
+                sampleSize: Number(p?.sampleSize) || 0,
+                source: "V6 CORNER & CARDS"
+              }))
+        )
+      };
+    });
+
+    localStorage.setItem(
+      "v6_studio_corner_feed_v1",
+      JSON.stringify({
+        source: "V6 CORNER & CARDS",
+        generatedAt: new Date().toISOString(),
+        matches: studioMatches
+      })
+    );
+  } catch (error) {
+    console.warn("V6 Studio TV Corner:", error);
+  }
+  
 }
 // ==========================================
 // AGENTE IA V6 CORNER & CARDS
