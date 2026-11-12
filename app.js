@@ -2873,7 +2873,14 @@ SERIE_B: "Serie B",
   EL: "UEFA Europa League",
   CH: "Championship",
   BR1: "Serie A",
-  BR2: "Serie B"
+  
+  BR2: "Serie B",
+  NO1: "Eliteserien",
+  SE1: "Allsvenskan",
+  CZ1: "Czech Liga",
+  DK1: "Superliga",
+  BE1: "Jupiler Pro League"
+  
 
 };
 
@@ -4027,6 +4034,21 @@ function filterSelectedLeagues(games) {
     return selectedCodes.some((code) => {
       const expectedName = LEAGUE_NAMES[code];
 
+      // V6 CORNER - Nuovi campionati europei
+      const newCountry = {
+        NO1: "norway",
+        SE1: "sweden",
+        CZ1: "czech",
+        DK1: "denmark",
+        BE1: "belgium"
+      }[code];
+
+      if (newCountry) {
+        return country.includes(newCountry) &&
+          leagueName.toLowerCase() ===
+          expectedName.toLowerCase();
+      }
+      
       
 if (
   !["BR1", "BR2", "SA", "SERIE_B"].includes(code) &&
