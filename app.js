@@ -1346,6 +1346,56 @@ const cardsAntiFalse = bestCardMarket
 
       <div class="market-grid">
 
+<div class="market-box" style="grid-column:1/-1;">
+  <strong>🧪 CALIBRAZIONE V6 PER MERCATO</strong>
+
+  ${[
+    ["Corner totali", "corner",
+      prediction.corners?.markets?.markets],
+    ["Cartellini totali", "cards",
+      prediction.yellowCards?.markets?.markets],
+    ["Corner casa", "corner-home",
+      prediction.corners?.homeMarkets?.markets],
+    ["Corner trasferta", "corner-away",
+      prediction.corners?.awayMarkets?.markets],
+    ["Cartellini casa", "cards-home",
+      prediction.yellowCards?.homeMarkets?.markets],
+    ["Cartellini trasferta", "cards-away",
+      prediction.yellowCards?.awayMarkets?.markets]
+  ].map(([name, type, markets]) => {
+    const market = getBestHistoryMarket(markets);
+
+    if (!market) return "";
+
+    const stats = getV6CalibrationStats(
+      type,
+      market.line,
+      market.percent,
+      match.league || ""
+    );
+
+    return `
+      <div style="margin-top:9px;font-size:13px;">
+        ${escapeHtml(name)}
+        Over ${Number(market.line)}
+        • ${stats.sample}/50 esiti
+
+        ${stats.enoughData
+          ? `• Osservati ${stats.observedPercent}%
+             • Attesi ${stats.expectedPercent}%`
+          : "• 🟡 Non validato"}
+      </div>
+    `;
+  }).join("")}
+
+  <small>
+    Conteggi relativi al mercato, alla linea
+    e alla fascia di probabilita'.
+    50 esiti non garantiscono da soli
+    l'affidabilita' della previsione.
+  </small>
+</div>
+
         <div class="market-box">
           <span>🚩 Corner previsti</span>
           <div class="market-value">
