@@ -2528,6 +2528,31 @@ teamGroups.forEach(({ type, label, category, markets, lines }) => {
         🔥 SCHEDINA EXPERT CORNER & CARDS 5-6
       </div>
 
+<div class="market-box" style="
+  border:2px solid #f59e0b;
+  padding:12px;
+  margin-bottom:14px;
+">
+  <strong>
+    🟡 SCHEDINA SPERIMENTALE - NON VALIDATA
+  </strong>
+
+  <p>
+    Le percentuali e le quote visualizzate
+    sono stime grezze del modello V6.
+  </p>
+
+  <p>
+    ⚠️ Non considerarle probabilità reali
+    confermate o Value Bet verificate.
+  </p>
+
+  <p>
+    Il sistema sta raccogliendo risultati
+    per calibrare e verificare le previsioni.
+  </p>
+</div>
+
       <div class="market-grid">
 
         ${picks.map(({ match, prediction }) => `
