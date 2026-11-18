@@ -2155,57 +2155,84 @@ window.cornerAiCheckValue = function(input) {
     : `⚠️ Nessun value robusto (${value.toFixed(1)}%)`;
 };
   
-  window.cornerAiUpdateCombinedValue = function() {
+  
+window.cornerAiUpdateCombinedValue = function() {
   const agent = document.getElementById("cornerAiAgent");
   if (!agent) return;
 
-  const inputs = [...agent.querySelectorAll(
-    ".corner-ai-bookmaker-odd"
-  )];
-
-  const odds = inputs.map(input => Number(input.value));
+  const inputs = Array.from(
+    agent.querySelectorAll(".corner-ai-bookmaker-odd")
+  );
 
   const bookmaker = document.getElementById(
     "cornerAiCombinedBookmaker"
   );
+
   const valueResult = document.getElementById(
     "cornerAiCombinedValue"
   );
 
   if (!bookmaker || !valueResult) return;
 
-  if (odds.length !== 2 || odds.some(q => !Number.isFinite(q) || q <= 1)) {
+  const odds = inputs.map(input => Number(input.value));
+
+  if (
+    odds.length !== 2 ||
+    odds.some(q => !Number.isFinite(q) || q <= 1)
+  ) {
     bookmaker.textContent = "--";
     valueResult.textContent = "Inserisci le due quote";
     return;
   }
 
   const combinedOdds = odds[0] * odds[1];
-  const probabilities = [...agent.querySelectorAll(
-  ".corner-ai-value-result"
-)].map(el => Number(el.dataset.probability));
-
-const combinedProbability =
-  probabilities[0] * probabilities[1] / 100;
-
-const fairOdds =
-  combinedProbability > 0
-    ? 100 / combinedProbability
-    : 0;
-  const value =
-  fairOdds > 0 && Number.isFinite(fairOdds)
-    ? (combinedOdds / fairOdds - 1) * 100
-    : 0;
-
   bookmaker.textContent = combinedOdds.toFixed(2);
-  
-const valuePercent = combinedOdds * combinedProbability - 100;
 
-valueResult.textContent = Number.isFinite(valuePercent)
-  ? `${valuePercent >= 5 ? "🟢 VALUE BET" : valuePercent > 0 ? "🟡 Valore basso" : "🔴 Non conveniente"} ${valuePercent >= 0 ? "+" : ""}${valuePercent.toFixed(1)}%`
-  : "⚠️ Impossibile calcolare la Value Bet";
-    
+  if (aiSelectedPicks.length !== 2) {
+    valueResult.textContent = "Doppia non disponibile";
+    return;
+  }
+
+  const stats = aiSelectedPicks.map(pick =>
+    getV6CalibrationStats(
+      pick.type,
+      pick.line,
+      pick.probability,
+      pick.match.league || ""
+    )
+  );
+
+  if (stats.some(item => !item.enoughData)) {
+    valueResult.textContent =
+      "🟡 VALUE NON VALIDATO • Storico insufficiente";
+    return;
+  }
+
+  const reliable = stats.every(item =>
+    item.lower95 >= 70 &&
+    Math.abs(
+      item.expectedPercent - item.observedPercent
+    ) <= 10
+  );
+
+  if (!reliable) {
+    valueResult.textContent =
+      "🛑 VALUE NON CONFERMATO • Calibrazione insufficiente";
+    return;
+  }
+
+  const conservativeProbability =
+    (stats[0].lower95 / 100) *
+    (stats[1].lower95 / 100);
+
+  const value =
+    (combinedOdds * conservativeProbability - 1) * 100;
+
+  valueResult.textContent = value >= 5
+    ? `🟡 Vantaggio teorico +${value.toFixed(1)}% • Da validare`
+    : `⚠️ Nessun value robusto (${value.toFixed(1)}%)`;
 };
+  
   window.cornerAiSetMode = function(mode) {
     cornerAiMode = mode;
     const agent = document.getElementById("cornerAiAgent");
