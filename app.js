@@ -299,13 +299,17 @@ if (!["FT", "AET", "PEN"].includes(status)) {
 }
 
 
-const rows = await fetchFixtureStatistics(
-  item.fixtureId
-);
+
+const rows =
+  fixture._v6HistoryStats ||
+  await fetchFixtureStatistics(item.fixtureId);
 
 if (!Array.isArray(rows) || rows.length < 2) {
   continue;
 }
+
+fixture._v6HistoryStats = rows;
+    
       
 
 
