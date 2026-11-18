@@ -751,6 +751,50 @@ if (
   };
       }
 
+  // ========================================
+  // V6 - VALIDAZIONE PROBABILITA' REALI
+  // ========================================
+
+  const calibrationStats = getV6CalibrationStats(
+    type,
+    line,
+    probabilityValue,
+    league
+  );
+
+  if (!calibrationStats.enoughData) {
+    return {
+      isTop: false,
+      status: "calibrating",
+      label:
+        `🟡 TOP non validato • ` +
+        `Storico ${calibrationStats.sample}/50`,
+      stats: historyStats,
+      calibration: calibrationStats
+    };
+  }
+
+  const calibrationError = Math.abs(
+    calibrationStats.expectedPercent -
+    calibrationStats.observedPercent
+  );
+
+  if (
+    calibrationStats.lower95 < 70 ||
+    calibrationError > 10
+  ) {
+    return {
+      isTop: false,
+      status: "blocked",
+      label:
+        `🛑 TOP bloccato • ` +
+        `Reale ${calibrationStats.observedPercent}% • ` +
+        `Atteso ${calibrationStats.expectedPercent}%`,
+      stats: historyStats,
+      calibration: calibrationStats
+    };
+  }
+  
   // ==============================
   // FILTRO 2 - CAMPIONE MINIMO
   // ==============================
