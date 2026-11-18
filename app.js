@@ -564,6 +564,96 @@ function getHistoricalMarketStats(type, line, league = "") {
   };
 }
 
+function getV6CalibrationStats(type, line, probability, league = "") {
+  const target = Number(probability);
+  const threshold = Number(line);
+
+  if (
+    !Number.isFinite(target) ||
+    target < 0 ||
+    target > 100 ||
+    !Number.isFinite(threshold)
+  ) {
+    return { sample: 0, enoughData: false };
+  }
+
+  const bucket = Math.min(9, Math.floor(target / 10));
+  const leagueName = String(league || "").trim().toLowerCase();
+
+  const historical = loadPredictionHistory().filter((item) => {
+    const p = Number(item.probability);
+    const createdAt = Date.parse(item.createdAt || "");
+    const kickoff = Date.parse(item.date || "");
+
+    return (
+      item.status === "settled" &&
+      item.source !== "historical-backfill" &&
+      typeof item.won === "boolean" &&
+      item.type === type &&
+      Math.abs(Number(item.line) - threshold) < 0.001 &&
+      Number.isFinite(p) &&
+      p >= 0 &&
+      p <= 100 &&
+      Math.min(9, Math.floor(p / 10)) === bucket &&
+      Number.isFinite(createdAt) &&
+      Number.isFinite(kickoff) &&
+      createdAt < kickoff
+    );
+  });
+
+  const leagueHistory = leagueName
+    ? historical.filter((item) =>
+        String(item.league || "").trim().toLowerCase() === leagueName
+      )
+    : [];
+
+  const data = leagueHistory.length >= 50
+    ? leagueHistory
+    : historical;
+
+  const sample = data.length;
+
+  if (!sample) {
+    return { sample: 0, enoughData: false };
+  }
+
+  const wins = data.filter((item) => item.won === true).length;
+  const observed = wins / sample;
+
+  const expected = data.reduce(
+    (sum, item) => sum + Number(item.probability) / 100,
+    0
+  ) / sample;
+
+  const brier = data.reduce((sum, item) => {
+    const p = Number(item.probability) / 100;
+    const actual = item.won ? 1 : 0;
+    return sum + (p - actual) ** 2;
+  }, 0) / sample;
+
+  const z = 1.96;
+  const denominator = 1 + (z * z) / sample;
+  const center =
+    (observed + (z * z) / (2 * sample)) / denominator;
+
+  const half = (z / denominator) * Math.sqrt(
+    observed * (1 - observed) / sample +
+    (z * z) / (4 * sample * sample)
+  );
+
+  return {
+    sample,
+    wins,
+    enoughData: sample >= 50,
+    scope: leagueHistory.length >= 50 ? "league" : "global",
+    expectedPercent: Math.round(expected * 100),
+    observedPercent: Math.round(observed * 100),
+    lower95: Math.max(0, Math.round((center - half) * 100)),
+    upper95: Math.min(100, Math.round((center + half) * 100)),
+    brierScore: Number(brier.toFixed(3))
+  };
+}
+
 function evaluateAntiFalseTop(
   type,
   line,
