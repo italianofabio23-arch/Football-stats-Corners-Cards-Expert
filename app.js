@@ -2492,14 +2492,61 @@ teamGroups.forEach(({ type, label, category, markets, lines }) => {
     }
   });
 
-  const picks = candidates
-  .filter((item) =>
-    item.prediction.value >= 68 &&
-    item.prediction.confidence >= 55 &&
-    item.score >= 65
-  )
+  
+const picks = candidates
+  .filter(({ match, prediction, score }) => {
+    if (
+      prediction.value < 68 ||
+      prediction.confidence < 55 ||
+      score < 65
+    ) {
+      return false;
+    }
+
+    const label = String(prediction.label || "");
+
+    const lineMatch = label.match(
+      /\bOver\s+(\d+(?:\.\d+)?)/i
+    );
+
+    if (!lineMatch) return false;
+
+    const category = /Cartellini/i.test(label)
+      ? "cards"
+      : /Corner/i.test(label)
+        ? "corner"
+        : null;
+
+    if (!category) return false;
+
+    const side = label.startsWith("🏠")
+      ? "-home"
+      : label.startsWith("✈️")
+        ? "-away"
+        : "";
+
+    const stats = getV6CalibrationStats(
+      category + side,
+      Number(lineMatch[1]),
+      prediction.value,
+      match.league || ""
+    );
+
+    if (!stats.enoughData) return false;
+
+    const calibrationError = Math.abs(
+      stats.expectedPercent -
+      stats.observedPercent
+    );
+
+    return (
+      stats.lower95 >= 70 &&
+      calibrationError <= 10
+    );
+  })
   .sort((a, b) => b.score - a.score)
   .slice(0, 6);
+                                
 
   if (picks.length < 5) {
     return `
