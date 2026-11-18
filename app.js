@@ -130,62 +130,67 @@ function recordPredictionHistory(match) {
   };
 
   
+
 const selections = [
   {
     type: "corner",
-    market: getBestHistoryMarket(
-      prediction?.corners?.markets?.markets
-    ),
+    markets: prediction?.corners?.markets?.markets,
     confidence: Number(
       match?.cornerCardConfidence?.corner
     ) || 0
   },
   {
     type: "cards",
-    market: getBestHistoryMarket(
-      prediction?.yellowCards?.markets?.markets
-    ),
+    markets: prediction?.yellowCards?.markets?.markets,
     confidence: Number(
       match?.cornerCardConfidence?.cards
     ) || 0
   },
   {
     type: "corner-home",
-    market: getBestHistoryMarket(
-      prediction?.corners?.homeMarkets?.markets
-    ),
-    confidence: Number(
-      match?.cornerCardConfidence?.corner
-    ) || 0
+    markets: prediction?.corners?.homeMarkets?.markets,
+    confidence: calculateCornerCardConfidence(
+      prediction, "corner-home"
+    )
   },
   {
     type: "corner-away",
-    market: getBestHistoryMarket(
-      prediction?.corners?.awayMarkets?.markets
-    ),
-    confidence: Number(
-      match?.cornerCardConfidence?.corner
-    ) || 0
+    markets: prediction?.corners?.awayMarkets?.markets,
+    confidence: calculateCornerCardConfidence(
+      prediction, "corner-away"
+    )
   },
   {
     type: "cards-home",
-    market: getBestHistoryMarket(
-      prediction?.yellowCards?.homeMarkets?.markets
-    ),
-    confidence: Number(
-      match?.cornerCardConfidence?.cards
-    ) || 0
+    markets: prediction?.yellowCards?.homeMarkets?.markets,
+    confidence: calculateCornerCardConfidence(
+      prediction, "cards-home"
+    )
   },
   {
     type: "cards-away",
-    market: getBestHistoryMarket(
-      prediction?.yellowCards?.awayMarkets?.markets
-    ),
-    confidence: Number(
-      match?.cornerCardConfidence?.cards
-    ) || 0
+    markets: prediction?.yellowCards?.awayMarkets?.markets,
+    confidence: calculateCornerCardConfidence(
+      prediction, "cards-away"
+    )
   }
-];
+].flatMap(({ type, markets, confidence }) =>
+  (Array.isArray(markets) ? markets : [])
+    .filter((market) =>
+      market?.line != null &&
+      market?.percent != null &&
+      Number.isFinite(Number(market.line)) &&
+      Number.isFinite(Number(market.percent)) &&
+      Number(market.percent) >= 0 &&
+      Number(market.percent) <= 100
+    )
+    .map((market) => ({
+      type,
+      market,
+      confidence
+    }))
+);
+    
   
 
   for (const selection of selections) {
