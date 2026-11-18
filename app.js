@@ -2310,22 +2310,33 @@ ${cornerAiBetType === CORNER_AI_BET_TYPES.DOUBLE &&
   aiSelectedPicks.length === 2
     ? `
       <div class="market-box">
-        <strong>📊 RIEPILOGO DOPPIA IA</strong>
-        <p>🎯 Probabilità combinata:
-          ${aiCombinedProbability.toFixed(1)}%
-        </p>
-        <p>💰 Quota equa combinata:
-          ${aiCombinedFairOdds.toFixed(2)}
-        </p>
-        <p>🏦 Quota bookmaker combinata:
+        
+<strong>📊 RIEPILOGO DOPPIA IA</strong>
+
+<p>🎯 Probabilità teorica non calibrata:
+  ${aiCombinedProbability.toFixed(1)}%
+</p>
+
+<p>💰 Quota teorica grezza:
+  ${aiCombinedFairOdds.toFixed(2)}
+</p>
+
+<p>🏦 Quota bookmaker combinata:
   <strong id="cornerAiCombinedBookmaker">--</strong>
 </p>
-<p>📈 Value Bet doppia:
-  <strong id="cornerAiCombinedValue">Inserisci le due quote</strong>
+
+<p>🛡️ Verifica Value Bet doppia:
+  <strong id="cornerAiCombinedValue">
+    Inserisci le due quote
+  </strong>
 </p>
-        <p style="font-size:12px;opacity:0.8;">
-          Stima basata sull'indipendenza dei due eventi.
-        </p>
+
+<p style="font-size:12px;opacity:0.8;">
+  ⚠️ Probabilità e quota teorica non validate.
+  Il controllo Value Bet utilizza lo storico,
+  ma richiede ulteriori verifiche statistiche.
+</p>
+
       </div>
     `
     : ""}
