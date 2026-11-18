@@ -2548,19 +2548,76 @@ const picks = candidates
   .slice(0, 6);
                                 
 
-  if (picks.length < 5) {
-    return `
-      <article class="match-card">
-        <div class="teams">
-        🔥 SCHEDINA EXPERT CORNER & CARDS 5-6
-        </div>
+  
+if (picks.length < 5) {
+  const storedHistory = loadPredictionHistory();
 
-        <div class="market-box">
-          Servono almeno 5 eventi Expert sufficientemente affidabili
-        </div>
-      </article>
-    `;
-  }
+  const verifiedHistory = storedHistory.filter((item) => {
+    const created = Date.parse(item?.createdAt || "");
+    const kickoff = Date.parse(item?.date || "");
+
+    return (
+      item?.status === "settled" &&
+      item?.source !== "historical-backfill" &&
+      typeof item?.won === "boolean" &&
+      Number.isFinite(created) &&
+      Number.isFinite(kickoff) &&
+      created < kickoff
+    );
+  });
+
+  const verifiedMatches = new Set(
+    verifiedHistory.map((item) =>
+      String(
+        item.fixtureId ||
+        `${item.date}|${item.home}|${item.away}`
+      )
+    )
+  ).size;
+
+  const pendingMarkets = storedHistory.filter(
+    (item) => item?.status === "pending"
+  ).length;
+
+  return `
+    <article class="match-card">
+      <div class="teams">
+        🛡️ V6 EXPERT - CONTROLLO AFFIDABILITA'
+      </div>
+
+      <div class="market-box">
+        <strong>📊 STATO CALIBRAZIONE</strong>
+
+        <p>✅ Mercati pre-match verificati:
+          ${verifiedHistory.length}
+        </p>
+
+        <p>⚽ Partite distinte verificate:
+          ${verifiedMatches}
+        </p>
+
+        <p>⏳ Mercati in attesa di risultato:
+          ${pendingMarkets}
+        </p>
+
+        <p>🎯 Selezioni idonee alla schedina:
+          ${picks.length}/5
+        </p>
+
+        <p>🟡 Schedina Expert non ancora disponibile.</p>
+
+        <small>
+          Servono almeno 50 esiti per mercato,
+          linea e fascia di probabilita'.
+          Le linee della stessa partita non
+          sono osservazioni indipendenti.
+          Lo storico e' salvato su questo browser.
+        </small>
+      </div>
+    </article>
+  `;
+}
+    
 
   const totalOdds = picks.reduce(
     (total, item) =>
