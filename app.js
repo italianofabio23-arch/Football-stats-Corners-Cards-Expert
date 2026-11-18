@@ -227,22 +227,16 @@ confidence: [
 };
 
 
-if (existingIndex >= 0) {
-  if (history[existingIndex].status !== "settled") {
-    history[existingIndex] = {
-      ...history[existingIndex],
-      ...item
-    };
-  }
-} else {
-  
+
+if (existingIndex === -1) {
   history.push({
     ...item,
     createdAt: new Date().toISOString(),
     result: null,
     won: null
   });
-}
+  }
+    
 }
 
 savePredictionHistory(history);
