@@ -2097,32 +2097,64 @@ return pick.score - difficultyPenalty;
         : `<div class="market-box">
          ⚠️ Nessun pronostico supera i filtri IA.
        </div>`;
-  window.cornerAiCheckValue = function(input) {
-  const quota = Number(input.value);
+  
+window.cornerAiCheckValue = function(input) {
   const result = input.closest(".market-box")
     ?.querySelector(".corner-ai-value-result");
 
   if (!result) return;
 
-  const probability = Number(result.dataset.probability);
+  const quota = Number(input.value);
 
-  if (!Number.isFinite(quota) || quota <= 1 ||
-      !Number.isFinite(probability) || probability <= 0) {
+  if (!Number.isFinite(quota) || quota <= 1) {
     result.textContent = "📊 Inserisci una quota valida.";
     return;
   }
 
-  const fairOdds = 100 / probability;
-  const value = ((quota / fairOdds) - 1) * 100;
+  const agent = document.getElementById("cornerAiAgent");
+  const inputs = Array.from(
+    agent?.querySelectorAll(".corner-ai-bookmaker-odd") || []
+  );
 
-  if (value >= 5) {
-    result.textContent = `🟢 VALUE BET +${value.toFixed(1)}%`;
-  } else if (value > 0) {
-    result.textContent = `🟡 Piccolo vantaggio +${value.toFixed(1)}%`;
-  } else {
-    result.textContent = `🔴 Quota non conveniente ${value.toFixed(1)}%`;
+  const pick = aiSelectedPicks[inputs.indexOf(input)];
+
+  if (!pick) {
+    result.textContent = "⚠️ Pronostico non disponibile.";
+    return;
   }
+
+  const stats = getV6CalibrationStats(
+    pick.type,
+    pick.line,
+    pick.probability,
+    pick.match.league || ""
+  );
+
+  if (!stats.enoughData) {
+    result.textContent =
+      `🟡 VALUE NON VALIDATO • Storico ${stats.sample}/50`;
+    return;
+  }
+
+  const error = Math.abs(
+    stats.expectedPercent - stats.observedPercent
+  );
+
+  if (stats.lower95 < 70 || error > 10) {
+    result.textContent =
+      "🛑 VALUE NON CONFERMATO • Calibrazione insufficiente";
+    return;
+  }
+
+  const value = (
+    quota * (stats.lower95 / 100) - 1
+  ) * 100;
+
+  result.textContent = value >= 5
+    ? `🟢 Vantaggio prudente stimato +${value.toFixed(1)}%`
+    : `⚠️ Nessun value robusto (${value.toFixed(1)}%)`;
 };
+  
   window.cornerAiUpdateCombinedValue = function() {
   const agent = document.getElementById("cornerAiAgent");
   if (!agent) return;
