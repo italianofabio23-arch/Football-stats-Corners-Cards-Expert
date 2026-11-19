@@ -281,27 +281,38 @@ for (const item of history) {
     const cacheKey = String(item.fixtureId);
     let fixture = fixtureCache.get(cacheKey);
 
-    if (!fixture) {
-      const fixtureResponse = await fetch(
-        
-`${BACKEND}/api/football?path=%2Ffixtures&id=${item.fixtureId}`,
-        
-        { cache: "no-store" }
-      );
+  
+if (!fixture) {
+  const fixtureDate = String(item.date || "").slice(0, 10);
 
-      if (!fixtureResponse.ok) {
-        continue;
-      }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fixtureDate)) {
+    continue;
+  }
 
-      const fixtureData = await fixtureResponse.json();
-      fixture = fixtureData?.response?.[0];
+  const dateCacheKey = `date:${fixtureDate}`;
+  let dailyFixtures = fixtureCache.get(dateCacheKey);
 
-      if (!fixture) {
-        continue;
-      }
+  if (!dailyFixtures) {
+    dailyFixtures = await fetchFixturesByDate(fixtureDate);
 
-      fixtureCache.set(cacheKey, fixture);
+    if (!Array.isArray(dailyFixtures)) {
+      continue;
     }
+
+    fixtureCache.set(dateCacheKey, dailyFixtures);
+  }
+
+  fixture = dailyFixtures.find((game) =>
+    Number(game?.fixture?.id) === Number(item.fixtureId)
+  );
+
+  if (!fixture) {
+    continue;
+  }
+
+  fixtureCache.set(cacheKey, fixture);
+}
+    
     
       const status =
         fixture?.fixture?.status?.short || "";
