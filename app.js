@@ -2738,6 +2738,93 @@ if (picks.length < 5) {
 
         <p>🟡 Schedina Expert non ancora disponibile.</p>
 
+<div class="market-box">
+  <button type="button"
+    style="padding:10px;background:#2563eb;color:white;border-radius:8px;"
+    onclick="(async (btn) => {
+      const out = btn.nextElementSibling;
+      btn.disabled = true;
+      out.textContent = 'Controllo API in corso...';
+
+      try {
+        const history = JSON.parse(
+          localStorage.getItem(
+            'corner_cards_prediction_history_v1'
+          ) || '[]'
+        );
+
+        const item = history.find(x =>
+          x.status === 'pending' &&
+          Number(x.fixtureId) > 0 &&
+          Number.isFinite(Date.parse(x.date || '')) &&
+          Date.now() >= Date.parse(x.date) + 10800000
+        );
+
+        if (!item) {
+          out.textContent = 'Nessuna partita controllabile.';
+          return;
+        }
+
+        const base =
+          'https://football-stats-v3.onrender.com/api/football';
+
+        const response = await fetch(
+          base + '?path=%2Ffixtures&amp;id=' +
+          encodeURIComponent(item.fixtureId),
+          { cache: 'no-store' }
+        );
+
+        const data = await response.json();
+        const fixture = data?.response?.[0];
+        const status =
+          fixture?.fixture?.status?.short || 'ASSENTE';
+
+        out.textContent =
+          'ID: ' + item.fixtureId +
+          ' | HTTP: ' + response.status +
+          ' | Stato: ' + status +
+          ' | Errori API: ' +
+          JSON.stringify(data.errors || {}).slice(0, 100);
+
+        if (!['FT', 'AET', 'PEN'].includes(status)) {
+          return;
+        }
+
+        const statsResponse = await fetch(
+          base + '?path=%2Ffixtures%2Fstatistics&amp;fixture=' +
+          encodeURIComponent(item.fixtureId),
+          { cache: 'no-store' }
+        );
+
+        const statsData = await statsResponse.json();
+        const teams = Array.isArray(statsData.response)
+          ? statsData.response : [];
+
+        const types = teams.flatMap(t =>
+          (t.statistics || []).map(s => s.type)
+        );
+
+        out.textContent +=
+          ' | Stats HTTP: ' + statsResponse.status +
+          ' | Squadre: ' + teams.length +
+          ' | Corner: ' + types.includes('Corner Kicks') +
+          ' | Gialli: ' + types.includes('Yellow Cards');
+
+      } catch (error) {
+        out.textContent =
+          'Errore richiesta: ' + error.message;
+      } finally {
+        btn.disabled = false;
+      }
+    })(this)">
+    🧪 TEST API RISULTATI
+  </button>
+
+  <div style="margin-top:10px;font-size:13px;overflow-wrap:anywhere;">
+    Premi il pulsante per verificare una partita.
+  </div>
+</div>
+
         <small>
           Servono almeno 50 esiti per mercato,
           linea e fascia di probabilita'.
