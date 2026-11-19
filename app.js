@@ -265,6 +265,18 @@ for (const item of history) {
     continue;
   }
 
+  // V6: controlla solo partite con tempo
+  // sufficiente per essere terminate.
+  const kickoffTime = Date.parse(item.date || "");
+
+  if (
+    !Number.isFinite(kickoffTime) ||
+    Date.now() < kickoffTime + 3 * 60 * 60 * 1000
+  ) {
+    continue;
+  }
+
+  
   try {
     const cacheKey = String(item.fixtureId);
     let fixture = fixtureCache.get(cacheKey);
