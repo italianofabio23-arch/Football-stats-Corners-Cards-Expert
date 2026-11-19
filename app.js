@@ -2753,12 +2753,17 @@ if (picks.length < 5) {
           ) || '[]'
         );
 
-        const item = history.find(x =>
-          x.status === 'pending' &&
-          Number(x.fixtureId) > 0 &&
-          Number.isFinite(Date.parse(x.date || '')) &&
-          Date.now() >= Date.parse(x.date) + 10800000
-        );
+        
+const item = history
+  .filter(x =>
+    x.status === 'pending' &&
+    Number(x.fixtureId) > 0 &&
+    Number.isFinite(Date.parse(x.date || ''))
+  )
+  .sort((a, b) =>
+    Date.parse(a.date) - Date.parse(b.date)
+  )[0];
+  
 
         if (!item) {
           out.textContent = 'Nessuna partita controllabile.';
