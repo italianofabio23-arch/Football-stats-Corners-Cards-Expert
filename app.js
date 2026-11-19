@@ -2765,10 +2765,38 @@ const item = history
   )[0];
   
 
-        if (!item) {
-          out.textContent = 'Nessuna partita controllabile.';
-          return;
-        }
+      
+if (!item) {
+  const pending = history.filter(x =>
+    x.status === 'pending'
+  );
+
+  const validIds = pending.filter(x =>
+    Number(x.fixtureId) > 0
+  ).length;
+
+  const validDates = pending.filter(x =>
+    Number.isFinite(Date.parse(x.date || ''))
+  ).length;
+
+  const both = pending.filter(x =>
+    Number(x.fixtureId) > 0 &&
+    Number.isFinite(Date.parse(x.date || ''))
+  ).length;
+
+  const first = pending[0] || {};
+
+  out.textContent =
+    'In attesa: ' + pending.length +
+    ' | ID validi: ' + validIds +
+    ' | Date valide: ' + validDates +
+    ' | Entrambi: ' + both +
+    ' | Primo ID: ' + String(first.fixtureId ?? 'assente') +
+    ' | Prima data: ' + String(first.date || 'assente');
+
+  return;
+}
+
 
         const base =
           'https://football-stats-v3.onrender.com/api/football';
