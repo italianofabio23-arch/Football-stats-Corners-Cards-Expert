@@ -2812,26 +2812,28 @@ if (!item) {
         const base =
           'https://football-stats-v3.onrender.com/api/football';
 
-        const response = await fetch(
-          base + '?path=%2Ffixtures&amp;id=' +
-          encodeURIComponent(item.fixtureId),
-          { cache: 'no-store' }
-        );
+        
+const fixtureDate = String(item.date || '').slice(0, 10);
 
-        const data = await response.json();
-        const fixture = data?.response?.[0];
-        const status =
-          fixture?.fixture?.status?.short || 'ASSENTE';
+const games = await fetchFixturesByDate(fixtureDate);
 
-        out.textContent =
-          'ID: ' + item.fixtureId +
-          ' | HTTP: ' + response.status +
-          ' | Stato: ' + status +
-          ' | Errori API: ' +
-          JSON.stringify(data.errors || {}).slice(0, 100);
+const fixture = games.find(game =>
+  Number(game?.fixture?.id) === Number(item.fixtureId)
+);
 
-        if (!['FT', 'AET', 'PEN'].includes(status)) {
-          return;
+const status =
+  fixture?.fixture?.status?.short || 'ASSENTE';
+
+out.textContent =
+  'ID: ' + item.fixtureId +
+  ' | Data: ' + fixtureDate +
+  ' | Partite trovate: ' + games.length +
+  ' | Stato: ' + status;
+
+if (!['FT', 'AET', 'PEN'].includes(status)) {
+  return;
+}
+
         }
 
         const statsResponse = await fetch(
