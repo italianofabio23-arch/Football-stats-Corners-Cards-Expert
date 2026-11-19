@@ -4642,11 +4642,31 @@ function filterSelectedLeagues(games) {
         BE1: "belgium"
       }[code];
 
-      if (newCountry) {
-        return country.includes(newCountry) &&
-          leagueName.toLowerCase() ===
-          expectedName.toLowerCase();
-      }
+          if (newCountry) {
+        const leagueIds = {
+          NO1: 103,
+          SE1: 113,
+          CZ1: 345,
+          DK1: 119,
+          BE1: 144
+        };
+
+        const names = {
+          NO1: ["eliteserien"],
+          SE1: ["allsvenskan"],
+          CZ1: ["czech liga", "chance liga", "first league"],
+          DK1: ["superliga", "superligaen", "3f superliga"],
+          BE1: ["jupiler pro league", "pro league", "first division a"]
+        };
+
+        const apiName = String(
+          game.league?.name || leagueName
+        ).trim().toLowerCase();
+
+        return leagueId === leagueIds[code] ||
+          (country.includes(newCountry) &&
+            names[code].includes(apiName));
+          }
       
       
 if (
