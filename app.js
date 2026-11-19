@@ -2664,6 +2664,18 @@ if (picks.length < 5) {
           ${pendingMarkets}
         </p>
 
+<p>🕒 Mercati da controllare (inizio previsto da oltre 3 ore):
+  ${storedHistory.filter((item) => {
+    const kickoff = Date.parse(item?.date || "");
+
+    return (
+      item?.status === "pending" &&
+      Number.isFinite(kickoff) &&
+      Date.now() >= kickoff + 3 * 60 * 60 * 1000
+    );
+  }).length}
+</p>
+
         <p>🎯 Selezioni idonee alla schedina:
           ${picks.length}/5
         </p>
