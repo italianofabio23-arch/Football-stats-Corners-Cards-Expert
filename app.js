@@ -271,7 +271,9 @@ for (const item of history) {
 
     if (!fixture) {
       const fixtureResponse = await fetch(
-        `${BACKEND}/api/football?fixture=${item.fixtureId}&path=%2Ffixtures`,
+        
+`${BACKEND}/api/football?path=%2Ffixtures&id=${item.fixtureId}`,
+        
         { cache: "no-store" }
       );
 
