@@ -434,6 +434,35 @@ searchBtn.addEventListener("click", async () => {
 
     const games = await fetchAllFixtures();
     const filteredGames = filterSelectedLeagues(games);
+    
+    // V6 CORNER - Diagnostica nuovi campionati
+    const nuoviPaesi = [
+      "norway", "sweden", "czech",
+      "denmark", "belgium"
+    ];
+
+    const trovate = games.filter(game => {
+      const paese = String(
+        game.league?.country ||
+        game.competition?.country?.name ||
+        game.country?.name || ""
+      ).toLowerCase();
+
+      return nuoviPaesi.some(p => paese.includes(p));
+    });
+
+    alert(
+      "DIAGNOSI V6 CORNER\n" +
+      "Partite ricevute API: " + games.length + "\n" +
+      "Partite dei 5 paesi: " + trovate.length + "\n" +
+      "Partite dopo filtro: " + filteredGames.length + "\n\n" +
+      trovate.slice(0, 5).map(g =>
+        (g.league?.country || "?") + " - " +
+        (g.league?.name || "?") +
+        " - ID " + (g.league?.id || "?")
+      ).join("\n")
+    );
+    
     const normalizedMatches = normalizeFixtures(filteredGames);
 
     await renderMatches(normalizedMatches);
