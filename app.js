@@ -2834,8 +2834,6 @@ if (!['FT', 'AET', 'PEN'].includes(status)) {
   return;
 }
 
-        }
-
         const statsResponse = await fetch(
           base + '?path=%2Ffixtures%2Fstatistics&amp;fixture=' +
           encodeURIComponent(item.fixtureId),
