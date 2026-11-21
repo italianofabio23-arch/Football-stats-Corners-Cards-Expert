@@ -278,40 +278,43 @@ for (const item of history) {
 
   
   try {
-    const cacheKey = String(item.fixtureId);
-    let fixture = fixtureCache.get(cacheKey);
+        const cacheKey = String(item.fixtureId);
 
-  
-if (!fixture) {
-  const fixtureDate = String(item.date || "").slice(0, 10);
+    if (!fixtureCache.has(cacheKey)) {
+      const url =
+        `${BACKEND}/api/football?path=%2Ffixtures&id=${encodeURIComponent(cacheKey)}`;
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fixtureDate)) {
-    continue;
-  }
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
 
-  const dateCacheKey = `date:${fixtureDate}`;
-  let dailyFixtures = fixtureCache.get(dateCacheKey);
+      if (!response.ok) {
+        throw new Error(
+          `Errore ricerca ID ${response.status}`
+        );
+      }
 
-  if (!dailyFixtures) {
-    dailyFixtures = await fetchFixturesByDate(fixtureDate);
+      const data = await response.json();
 
-    if (!Array.isArray(dailyFixtures)) {
-      continue;
+      if (data.errors && Object.keys(data.errors).length) {
+        throw new Error("Errore API ricerca ID");
+      }
+
+      const found = Array.isArray(data.response)
+        ? data.response.find(game =>
+            Number(game?.fixture?.id) ===
+            Number(item.fixtureId)
+          ) || null
+        : null;
+
+      fixtureCache.set(cacheKey, found);
     }
 
-    fixtureCache.set(dateCacheKey, dailyFixtures);
-  }
+    const fixture = fixtureCache.get(cacheKey);
 
-  fixture = dailyFixtures.find((game) =>
-    Number(game?.fixture?.id) === Number(item.fixtureId)
-  );
-
-  if (!fixture) {
-    continue;
-  }
-
-  fixtureCache.set(cacheKey, fixture);
-}
+    if (!fixture) {
+      continue;
+    }
     
     
       const status =
