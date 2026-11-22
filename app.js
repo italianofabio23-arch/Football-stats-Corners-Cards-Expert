@@ -2733,7 +2733,50 @@ if (picks.length < 5) {
         <p>⏳ Mercati in attesa di risultato:
           ${pendingMarkets}
         </p>
+        <div class="market-box">
+          <strong>🔎 DIAGNOSI STORICO CORNER</strong>
 
+          <div>Partite analizzate: ${matches.length}</div>
+
+          <div>Partite future valide: ${matches.filter(m => {
+            const raw = m.raw || m;
+            const kickoff = Date.parse(
+              raw?.fixture?.date || raw?.utcDate ||
+              m.date || ""
+            );
+            const status = String(
+              raw?.fixture?.status?.short ??
+              raw?.status ?? m.status ?? ""
+            ).toUpperCase();
+
+            return Number.isFinite(kickoff) &&
+              kickoff > Date.now() &&
+              ["NS", "SCHEDULED", "TIMED"].includes(status);
+          }).length}</div>
+
+          <div>Partite con previsioni: ${matches.filter(
+            m => !!m.cornerCardPrediction
+          ).length}</div>
+
+          <div>Mercati disponibili: ${matches.reduce((sum, m) => {
+            const p = m.cornerCardPrediction;
+            const groups = [
+              p?.corners?.markets?.markets,
+              p?.corners?.homeMarkets?.markets,
+              p?.corners?.awayMarkets?.markets,
+              p?.yellowCards?.markets?.markets,
+              p?.yellowCards?.homeMarkets?.markets,
+              p?.yellowCards?.awayMarkets?.markets
+            ];
+
+            return sum + groups.reduce(
+              (n, a) => n + (Array.isArray(a) ? a.length : 0),
+              0
+            );
+          }, 0)}</div>
+
+          <div>Record nello storico: ${storedHistory.length}</div>
+        </div>
 <p>🕒 Mercati da controllare (inizio previsto da oltre 3 ore):
   ${storedHistory.filter((item) => {
     const kickoff = Date.parse(item?.date || "");
