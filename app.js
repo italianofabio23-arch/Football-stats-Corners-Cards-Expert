@@ -2776,6 +2776,45 @@ if (picks.length < 5) {
           }, 0)}</div>
 
           <div>Record nello storico: ${storedHistory.length}</div>
+                    <div>Future con previsioni: ${matches.filter(m => {
+            const raw = m.raw || m;
+            const time = Date.parse(
+              raw?.fixture?.date || raw?.utcDate ||
+              m.date || ""
+            );
+            return !!m.cornerCardPrediction &&
+              Number.isFinite(time) &&
+              time > Date.now();
+          }).length}</div>
+
+          <div>Registrabili pre-match: ${matches.filter(m => {
+            const raw = m.raw || m;
+            const time = Date.parse(
+              raw?.fixture?.date || raw?.utcDate ||
+              m.date || ""
+            );
+            const status = String(
+              raw?.fixture?.status?.short ??
+              raw?.status ?? m.status ?? ""
+            ).trim().toUpperCase();
+
+            return !!m.cornerCardPrediction &&
+              Number.isFinite(time) &&
+              time > Date.now() &&
+              ["NS", "SCHEDULED", "TIMED"].includes(status);
+          }).length}</div>
+
+          <div>Record storici backfill:
+            ${storedHistory.filter(
+              x => x.source === "historical-backfill"
+            ).length}
+          </div>
+
+          <div>Record non backfill:
+            ${storedHistory.filter(
+              x => x.source !== "historical-backfill"
+            ).length}
+          </div>
         </div>
 <p>🕒 Mercati da controllare (inizio previsto da oltre 3 ore):
   ${storedHistory.filter((item) => {
