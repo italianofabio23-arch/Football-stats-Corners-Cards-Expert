@@ -1832,10 +1832,33 @@ async function renderMatches(matches) {
 resultsInfo.textContent =
   "🚩🟨 Analisi Corner & Cards in corso...";
 
+// V6 CORNER - ANALIZZA PRIMA SOLO PARTITE FUTURE
+const upcomingMatches = matches.filter((match) => {
+  const source = match.raw || match;
+
+  const kickoff = Date.parse(
+    source?.fixture?.date ??
+    source?.utcDate ??
+    match?.date ??
+    ""
+  );
+
+  const status = String(
+    source?.fixture?.status?.short ??
+    source?.status ??
+    match?.status ??
+    ""
+  ).trim().toUpperCase();
+
+  return Number.isFinite(kickoff) &&
+    kickoff > Date.now() &&
+    ["NS", "SCHEDULED", "TIMED"].includes(status);
+});
+
 const enrichedMatches = [];
 
-for (let i = 0; i < matches.length; i += 2) {
-  const batch = matches.slice(i, i + 2);
+for (let i = 0; i < upcomingMatches.length; i += 2) {
+  const batch = upcomingMatches.slice(i, i + 2);
 
   const batchResults = await Promise.all(
     batch.map((match) =>
