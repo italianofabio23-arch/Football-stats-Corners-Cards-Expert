@@ -4676,10 +4676,10 @@ function buildRealAnomalies(homeProfile, awayProfile) {
 
         } else if (type === "yellowCards") {
           lines = period === "FT"
-            ? (total ? [2.5,3.5,4.5,5.5,6.5]
-                     : [1.5,2.5,3.5])
-            : (total ? [1.5,2.5,3.5]
-                     : [1.5,2.5]);
+                        ? (total ? [3.5,4.5,5.5,6.5,7.5]
+                     : [1.5,2.5,3.5,4.5])
+            : (total ? [1.5,2.5,3.5,4.5]
+                     : [1.5,2.5,3.5]);
 
         } else {
           lines = [0.5];
