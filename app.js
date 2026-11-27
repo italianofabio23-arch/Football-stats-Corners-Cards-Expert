@@ -2140,7 +2140,92 @@ const anomalyScannerHTML = `
           </div>
 
         `).join("")}
+${m.realAnomalies.some(a =>
+  /cartellini|espulsioni/i.test(a.label)
+) ? `
 
+<div style="
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #eab308;
+  border-radius:10px;
+">
+
+  <strong style="color:#eab308;font-size:16px;">
+    🟨 ANALISI ARBITRALE V6
+  </strong>
+
+  <p>
+    Arbitro: ${escapeHtml(
+      m.refereeName || "Designazione non disponibile"
+    )}
+  </p>
+
+  ${m.refereeAnalysis ? `
+
+    <small>
+      Partite raccolte: ${m.refereeAnalysis.sampleSize}
+    </small>
+
+    ${["FT","1T","2T"].map(period => {
+
+      const p = m.refereeAnalysis.periods[period];
+
+      return `
+        <div style="
+          margin-top:10px;
+          padding:8px;
+          background:rgba(234,179,8,0.08);
+          border-radius:8px;
+        ">
+
+          <strong>${period}</strong>
+          <br>
+          Gialli totali: ${p.total.yellow.mean ?? "N/D"}
+          <br>
+          Gialli casa: ${p.home.yellow.mean ?? "N/D"}
+          <br>
+          Gialli ospite: ${p.away.yellow.mean ?? "N/D"}
+          <br>
+
+          <small>
+            Campione gialli totali: ${p.total.yellow.n}
+          </small>
+
+          ${p.total.yellow.markets.map(v => `
+            <div>
+              Over ${v.line} gialli:
+              ${v.frequency}% (${v.hits}/${v.n})
+            </div>
+          `).join("")}
+
+          ${p.total.red.markets.map(v => `
+            <div>
+              🟥 Almeno un rosso:
+              ${v.frequency}% (${v.hits}/${v.n})
+            </div>
+          `).join("")}
+
+        </div>
+      `;
+
+    }).join("")}
+
+    <p>
+      Più gialli 1T:
+      ${m.refereeAnalysis.moreCards.first ?? "N/D"}${m.refereeAnalysis.moreCards.first == null ? "" : "%"}
+      <br>
+      Più gialli 2T:
+      ${m.refereeAnalysis.moreCards.second ?? "N/D"}${m.refereeAnalysis.moreCards.second == null ? "" : "%"}
+    </p>
+
+  ` : `
+    <small>Storico arbitrale non disponibile.</small>
+  `}
+
+</div>
+
+` : ""}
       </div>
 
     `).join("")}
