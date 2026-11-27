@@ -4948,6 +4948,88 @@ function summarizeRefereeProfile(profile) {
     }
   };
 }
+const h2hFixturesCache = new Map();
+
+async function fetchH2HFixtures(homeId, awayId) {
+
+  const h = Number(homeId);
+  const a = Number(awayId);
+
+  if (!Number.isInteger(h) ||
+      !Number.isInteger(a) ||
+      h <= 0 || a <= 0 || h === a) {
+    return [];
+  }
+
+  const key = [h, a].sort((x, y) => x - y).join("-");
+
+  if (h2hFixturesCache.has(key)) {
+    return h2hFixturesCache.get(key);
+  }
+
+  const request = (async () => {
+
+    const url = BACKEND +
+      "/api/football?path=%2Ffixtures%2Fheadtohead" +
+      "&h2h=" + key + "&last=5";
+
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Storico H2H non disponibile");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.response) ||
+        Object.keys(data.errors || {}).length > 0) {
+      throw new Error("Dati H2H non validi");
+    }
+
+    const seen = new Set();
+
+    return data.response
+      .filter(g => {
+
+        const id = Number(g?.fixture?.id);
+        const time = Number(g?.fixture?.timestamp);
+        const gh = Number(g?.teams?.home?.id);
+        const ga = Number(g?.teams?.away?.id);
+
+        if (!id || seen.has(id) ||
+            g?.fixture?.status?.short !== "FT" ||
+            !(time > 0 && time * 1000 < Date.now())) {
+          return false;
+        }
+
+        if (!((gh === h && ga === a) ||
+              (gh === a && ga === h))) {
+          return false;
+        }
+
+        seen.add(id);
+        return true;
+
+      })
+      .sort((x, y) =>
+        y.fixture.timestamp - x.fixture.timestamp
+      )
+      .slice(0, 5);
+
+  })();
+
+  h2hFixturesCache.set(key, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    h2hFixturesCache.delete(key);
+    console.warn("Errore H2H:", error);
+    return [];
+  }
+      }
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
   const limit = Math.max(1, Math.min(24, Number(last) || 6));
