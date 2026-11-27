@@ -4371,7 +4371,50 @@ backfillCornerHistoryFromFixture(
         ? parsed.away
         : parsed.home;
 
+            const ownRow = statistics.find(
+        r => Number(r?.team?.id) === id
+      );
+
+      const opponentRow = statistics.find(
+        r => Number(r?.team?.id) ===
+          (isHome ? awayId : homeId)
+      );
+
+      function readFullStat(row, type) {
+        const item = row?.statistics?.find(
+          s => s.type === type
+        );
+
+        if (item?.value == null || item.value === "") {
+          return null;
+        }
+
+        const n = Number(item.value);
+
+        return Number.isInteger(n) && n >= 0
+          ? n : null;
+      }
+
       samples.push({
+        fixtureId,
+        isHome,
+
+        halvesFor: ownRow && opponentRow
+          ? parsed.halves[isHome ? "home" : "away"]
+          : null,
+
+        halvesAgainst: ownRow && opponentRow
+          ? parsed.halves[isHome ? "away" : "home"]
+          : null,
+
+        realCornersFor: readFullStat(ownRow, "Corner Kicks"),
+        realCornersAgainst: readFullStat(opponentRow, "Corner Kicks"),
+
+        realYellowFor: readFullStat(ownRow, "Yellow Cards"),
+        realYellowAgainst: readFullStat(opponentRow, "Yellow Cards"),
+
+        realRedFor: readFullStat(ownRow, "Red Cards"),
+        realRedAgainst: readFullStat(opponentRow, "Red Cards"),
         cornersFor: own.corners,
         cornersAgainst: opponent.corners,
 
