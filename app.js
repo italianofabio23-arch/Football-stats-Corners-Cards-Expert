@@ -2164,8 +2164,26 @@ ${m.realAnomalies.some(a =>
   ${m.refereeAnalysis ? `
 
     <small>
-      Partite raccolte: ${m.refereeAnalysis.sampleSize}
-    </small>
+  Partite raccolte: ${m.refereeAnalysis.sampleSize}
+  <br>
+
+  Campionato storico:
+  ${m.refereeAnalysis.sourceLeagueId === 71
+    ? "Serie A Brasile"
+    : m.refereeAnalysis.sourceLeagueId === 72
+    ? "Serie B Brasile"
+    : "Campionato della partita"}
+
+  <br>
+
+  ${m.refereeAnalysis.externalLeague
+    ? "⚠️ Storico di un altro campionato"
+    : "✓ Storico dello stesso campionato"}
+
+  ${m.refereeAnalysis.sampleSize < 8
+    ? "<br>⚠️ Campione insufficiente"
+    : ""}
+</small>
 
     ${["FT","1T","2T"].map(period => {
 
