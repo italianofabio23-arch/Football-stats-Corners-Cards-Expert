@@ -4669,8 +4669,13 @@ async function buildRefereeAnomalyProfile(
 ) {
 
   const normalize = value =>
-    String(value || "").trim().toLowerCase()
-      .replace(/\s+/g, " ");
+  String(value || "")
+    .split(",")[0]
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 
   const name = normalize(referee);
 
