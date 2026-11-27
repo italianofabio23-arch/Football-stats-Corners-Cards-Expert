@@ -1811,24 +1811,37 @@ match.realAnomalies.length > 0 ? `
         ${escapeHtml(a.label)}
       </strong>
 
-      <div style="
-        color:#22c55e;
-        font-size:22px;
+            <div style="
+        color:${a.frequency >= 90 ? "#38bdf8" :
+                a.frequency >= 80 ? "#22c55e" : "#eab308"};
+        font-size:24px;
         font-weight:800;
       ">
         ${a.frequency}%
       </div>
+
+      <small style="
+        color:${a.frequency >= 90 ? "#38bdf8" :
+                a.frequency >= 80 ? "#22c55e" : "#eab308"};
+        font-weight:800;
+      ">
+        ${a.frequency >= 90 ? "ANOMALIA MOLTO FORTE" :
+          a.frequency >= 80 ? "ANOMALIA FORTE" :
+          "ANOMALIA RILEVATA"}
+      </small>
 
       <div style="
         height:6px;
         background:#334155;
         border-radius:6px;
         overflow:hidden;
+        margin-top:6px;
       ">
         <div style="
           width:${a.frequency}%;
           height:6px;
-          background:#22c55e;
+          background:${a.frequency >= 90 ? "#38bdf8" :
+                       a.frequency >= 80 ? "#22c55e" : "#eab308"};
         "></div>
       </div>
 
