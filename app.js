@@ -5011,6 +5011,21 @@ realAnomalies: buildRealAnomalies(
   homeAnomalyProfile,
   awayAnomalyProfile
 ),
+anomalyDebug: {
+  homeFound: homeAnomalyFixtures.length,
+  awayFound: awayAnomalyFixtures.length,
+
+  homeValid: homeAnomalyProfile?.sampleSize || 0,
+  awayValid: awayAnomalyProfile?.sampleSize || 0,
+
+  homeHalves: (homeAnomalyProfile?.anomalySamples || [])
+    .filter(s => s.halvesFor?.corners &&
+                 s.halvesAgainst?.corners).length,
+
+  awayHalves: (awayAnomalyProfile?.anomalySamples || [])
+    .filter(s => s.halvesFor?.corners &&
+                 s.halvesAgainst?.corners).length
+},
 cornerCardPrediction,
      yellowCardCandidates,
        cornerCardConfidence: {
