@@ -5945,11 +5945,35 @@ if (realAnomalies.length > 0) {
       sourceGame?.league?.season
     );
 
-    realAnomalies = buildRealAnomalies(
+        realAnomalies = buildRealAnomalies(
       homeAnomalyProfile,
       awayAnomalyProfile,
       leagueSamples
     );
+
+    if (realAnomalies.some(a =>
+      a.leagueConfirmed === true
+    )) {
+
+      try {
+
+        const h2hSamples =
+          await buildH2HAnomalySamples(
+            homeTeamId,
+            awayTeamId
+          );
+
+        realAnomalies = buildRealAnomalies(
+          homeAnomalyProfile,
+          awayAnomalyProfile,
+          leagueSamples,
+          h2hSamples
+        );
+
+      } catch (error) {
+        console.warn("Analisi H2H non disponibile");
+      }
+    }
 
   } catch (error) {
     console.warn("Confronto campionato non disponibile");
