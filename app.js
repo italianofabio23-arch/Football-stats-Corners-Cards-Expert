@@ -1763,6 +1763,73 @@ match.yellowCardCandidates.length > 0 ? `
     </div>
   </div>
 ` : ""}
+${Array.isArray(match.realAnomalies) &&
+match.realAnomalies.length > 0 ? `
+
+<div class="market-box" style="
+  grid-column:1 / -1;
+  border:1px solid #22c55e;
+  padding:12px;
+  border-radius:12px;
+">
+
+  <span style="
+    color:#22c55e;
+    font-size:16px;
+    font-weight:800;
+  ">
+    🔥 ANOMALIE STATISTICHE REALI
+  </span>
+
+  ${match.realAnomalies.map(a => `
+    <div style="
+      margin-top:12px;
+      padding:10px;
+      background:rgba(34,197,94,0.08);
+      border-radius:8px;
+    ">
+
+      <strong style="font-size:15px;">
+        ${escapeHtml(a.label)}
+      </strong>
+
+      <div style="
+        color:#22c55e;
+        font-size:22px;
+        font-weight:800;
+      ">
+        ${a.frequency}%
+      </div>
+
+      <div style="
+        height:6px;
+        background:#334155;
+        border-radius:6px;
+        overflow:hidden;
+      ">
+        <div style="
+          width:${a.frequency}%;
+          height:6px;
+          background:#22c55e;
+        "></div>
+      </div>
+
+      <small>
+        🏠 Storico casa: ${a.homeHits}/${a.homeN}
+        <br>
+        ✈️ Storico ospite: ${a.awayHits}/${a.awayN}
+      </small>
+
+    </div>
+  `).join("")}
+
+  <small>
+    Frequenza storica, non probabilità garantita.
+  </small>
+
+</div>
+
+` : ""}
         <div class="market-box">
           <span>📊 Campione analizzato</span>
           <div class="market-value">
