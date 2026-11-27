@@ -4423,6 +4423,16 @@ async function fetchLeagueAnomalyFixtures(leagueId, season) {
     return [];
   }
 }
+  async function fetchRecentTeamFixtures(teamId, last = 6) {
+  const id = Number(teamId);
+  const limit = Math.max(1, Math.min(24, Number(last) || 6));
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return [];
+  }
+
+  const cacheKey = id + "-" + limit;
+
   if (recentFixturesCache.has(cacheKey)) {
     return recentFixturesCache.get(cacheKey);
   }
