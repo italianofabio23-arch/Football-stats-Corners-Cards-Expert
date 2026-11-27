@@ -4195,8 +4195,13 @@ async function fetchRecentTeamFixtures(teamId, last = 6) {
   const data = await response.json();
 
   const fixtures = Array.isArray(data.response)
-    ? data.response
-    : [];
+  ? data.response
+      .filter(game => game?.fixture?.status?.short === "FT")
+      .sort((a, b) =>
+        Number(b.fixture.timestamp) -
+        Number(a.fixture.timestamp)
+      )
+  : [];
 
   recentFixturesCache.set(cacheKey, fixtures);
 
