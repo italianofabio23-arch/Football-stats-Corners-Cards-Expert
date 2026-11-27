@@ -4480,9 +4480,9 @@ async function buildLeagueAnomalySamples(leagueId, season) {
 
   const request = (async () => {
 
-    const fixtures = await fetchLeagueAnomalyFixtures(
-      leagueId, season
-    ).slice(0, 40);
+    const fixtures = (await fetchLeagueAnomalyFixtures(
+  leagueId, season
+)).slice(0, 40);
 
     const samples = [];
     const seen = new Set();
