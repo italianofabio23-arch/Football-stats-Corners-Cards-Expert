@@ -4362,10 +4362,9 @@ async function buildTeamCornerCardProfile(
           homeId,
           awayId
         );
-backfillCornerHistoryFromFixture(
-  game,
-  parsed
-);
+if (updateHistory) {
+  backfillCornerHistoryFromFixture(game, parsed);
+}
       const isHome = homeId === id;
 
       const own = isHome
