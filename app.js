@@ -5436,7 +5436,7 @@ anomalySamples: samples,
     )
   };
 }
-function buildRealAnomalies(homeProfile, awayProfile, leagueSamples = []) {
+function buildRealAnomalies(homeProfile, awayProfile, leagueSamples = [], h2hSamples = []) {
 
   const home = (homeProfile?.anomalySamples || [])
     .filter(s => s.isHome === true);
