@@ -2083,7 +2083,47 @@ const anomalyScannerHTML = `
               🏠 ${a.homeHits}/${a.homeN}
               • ✈️ ${a.awayHits}/${a.awayN}
             </small>
+<div style="
+  margin-top:8px;
+  padding:8px;
+  background:rgba(100,116,139,0.12);
+  border-radius:8px;
+">
 
+  ${a.leagueFrequency !== null &&
+    a.leagueFrequency !== undefined ? `
+
+    <small>
+      🏆 Campionato: ${a.leagueFrequency}%
+      (${a.leagueHits}/${a.leagueN})
+    </small>
+
+    <br>
+
+    <strong style="
+      color:${a.leagueConfirmed ?
+        "#22c55e" : "#eab308"};
+    ">
+      Scostamento:
+      ${a.leagueGap > 0 ? "+" : ""}${a.leagueGap} punti
+    </strong>
+
+    <br>
+
+    <small>
+      ${a.leagueConfirmed
+        ? "✓ SCOSTAMENTO CONFERMATO"
+        : "⚠️ SCOSTAMENTO RIDOTTO"}
+    </small>
+
+  ` : `
+    <small style="color:#94a3b8;">
+      Campione campionato insufficiente
+      (${a.leagueN || 0}/25)
+    </small>
+  `}
+
+</div>
           </div>
 
         `).join("")}
