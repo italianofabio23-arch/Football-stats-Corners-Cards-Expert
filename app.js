@@ -2137,6 +2137,54 @@ const anomalyScannerHTML = `
   `}
 
 </div>
+<div style="
+  margin-top:8px;
+  padding:10px;
+  background:rgba(56,189,248,0.08);
+  border:1px solid #334155;
+  border-radius:8px;
+">
+
+  <strong style="color:#38bdf8;">
+    ⚔️ SCONTRI DIRETTI H2H
+  </strong>
+
+  ${a.h2hFrequency != null ? `
+
+    <div style="
+      font-size:22px;
+      font-weight:800;
+      color:${a.h2hFrequency >= 80 ? "#22c55e" :
+              a.h2hFrequency >= 60 ? "#eab308" :
+              "#ef4444"};
+    ">
+      ${a.h2hFrequency}%
+    </div>
+
+    <small>
+      Esiti favorevoli: ${a.h2hHits}/${a.h2hN}
+      <br>
+      Stesso campo: ${a.h2hSameVenue}/${a.h2hN}
+      <br>
+      Gia presenti nello storico:
+      ${a.h2hShared}/${a.h2hN}
+    </small>
+
+  ` : `
+    <div>
+      Campione H2H insufficiente:
+      ${a.h2hN || 0}/3
+    </div>
+  `}
+
+  <br>
+
+  <small style="color:#94a3b8;">
+    Controllo supplementare, non indipendente
+    se presente nello storico delle squadre.
+  </small>
+
+</div>
           </div>
 
         `).join("")}
