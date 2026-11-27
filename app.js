@@ -5516,6 +5516,12 @@ function buildRealAnomalies(homeProfile, awayProfile, leagueSamples = []) {
       ? Math.round((minimum - l.rate) * 100)
       : null;
 
+        const validH2H = h2hSamples.filter(
+      s => typeof test(s) === "boolean"
+    );
+
+    const direct = rate(validH2H, test);
+
     results.push({
       label,
       homeHits: h.hits,
@@ -5529,13 +5535,26 @@ function buildRealAnomalies(homeProfile, awayProfile, leagueSamples = []) {
       leagueN: l.n,
 
       leagueFrequency: leagueValid
-        ? Math.round(l.rate * 100)
-        : null,
+        ? Math.round(l.rate * 100) : null,
 
       leagueGap,
 
       leagueConfirmed:
-        leagueValid && minimum - l.rate >= 0.15
+        leagueValid && minimum - l.rate >= 0.15,
+
+      h2hHits: direct.hits,
+      h2hN: direct.n,
+
+      h2hFrequency: direct.n >= 3
+        ? Math.round(direct.rate * 100) : null,
+
+      h2hShared: validH2H.filter(
+        s => usedIds.has(s.fixtureId)
+      ).length,
+
+      h2hSameVenue: validH2H.filter(
+        s => s.sameVenue === true
+      ).length
     });
 
     return true;
