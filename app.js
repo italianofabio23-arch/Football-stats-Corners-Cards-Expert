@@ -3661,7 +3661,7 @@ async function fetchFixtureStatistics(fixtureId) {
 
   
 const url =
-  `${BACKEND}/api/football?fixture=${id}&path=%2Ffixtures%2Fstatistics`;
+  ``${BACKEND}/api/football?fixture=${id}&path=%2Ffixtures%2Fstatistics&half=true`;
   
 
   const response = await fetch(url, {
