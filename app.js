@@ -5030,6 +5030,87 @@ async function fetchH2HFixtures(homeId, awayId) {
     return [];
   }
       }
+async function buildH2HAnomalySamples(homeId, awayId) {
+
+  const hId = Number(homeId);
+  const aId = Number(awayId);
+
+  const fixtures = await fetchH2HFixtures(hId, aId);
+
+  const samples = [];
+
+  function read(row, type) {
+
+    const item = row?.statistics?.find(
+      s => s?.type === type
+    );
+
+    if (item?.value == null || item.value === "") {
+      return null;
+    }
+
+    const n = Number(item.value);
+
+    return Number.isInteger(n) && n >= 0
+      ? n : null;
+  }
+
+  for (const game of fixtures) {
+
+    const fixtureId = Number(game?.fixture?.id);
+
+    try {
+
+      const stats = await fetchFixtureStatistics(
+        fixtureId
+      );
+
+      const h = stats.find(
+        r => Number(r?.team?.id) === hId
+      );
+
+      const a = stats.find(
+        r => Number(r?.team?.id) === aId
+      );
+
+      if (!h || !a) continue;
+
+      const parsed = parseCornerCardStatistics(
+        stats, hId, aId
+      );
+
+      samples.push({
+        fixtureId,
+
+        date: game?.fixture?.date,
+
+        leagueId: game?.league?.id,
+
+        sameVenue:
+          Number(game?.teams?.home?.id) === hId,
+
+        isHome: true,
+
+        realCornersFor: read(h, "Corner Kicks"),
+        realCornersAgainst: read(a, "Corner Kicks"),
+
+        realYellowFor: read(h, "Yellow Cards"),
+        realYellowAgainst: read(a, "Yellow Cards"),
+
+        realRedFor: read(h, "Red Cards"),
+        realRedAgainst: read(a, "Red Cards"),
+
+        halvesFor: parsed.halves.home,
+        halvesAgainst: parsed.halves.away
+      });
+
+    } catch (error) {
+      console.warn("Statistiche H2H:", fixtureId);
+    }
+  }
+
+  return samples;
+}
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
   const limit = Math.max(1, Math.min(24, Number(last) || 6));
