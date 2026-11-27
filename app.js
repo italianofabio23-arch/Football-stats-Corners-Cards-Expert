@@ -4490,6 +4490,173 @@ anomalySamples: samples,
     )
   };
 }
+function buildRealAnomalies(homeProfile, awayProfile) {
+
+  const home = (homeProfile?.anomalySamples || [])
+    .filter(s => s.isHome === true);
+
+  const away = (awayProfile?.anomalySamples || [])
+    .filter(s => s.isHome === false);
+
+  if (home.length < 8 || away.length < 8) return [];
+
+  const results = [];
+
+  function getValue(s, type, period, side) {
+    if (side === "Totali") {
+      const a = getValue(s, type, period, "Casa");
+      const b = getValue(s, type, period, "Ospite");
+
+      return a === null || b === null ? null : a + b;
+    }
+
+    const own = s.isHome === (side === "Casa");
+
+    let value;
+
+    if (period === "FT") {
+      const key = {
+        corners: "realCorners",
+        yellowCards: "realYellow",
+        redCards: "realRed"
+      }[type];
+
+      value = s[key + (own ? "For" : "Against")];
+
+    } else {
+      const pair = own ? s.halvesFor : s.halvesAgainst;
+
+      value = pair?.[type]?.[period === "1T" ? 0 : 1];
+    }
+
+    return Number.isInteger(value) && value >= 0
+      ? value : null;
+  }
+
+  function rate(samples, test) {
+    const valid = samples.map(test)
+      .filter(v => typeof v === "boolean");
+
+    const hits = valid.filter(Boolean).length;
+
+    return {
+      hits,
+      n: valid.length,
+      rate: valid.length ? hits / valid.length : 0
+    };
+  }
+
+  function evaluate(label, test) {
+    const h = rate(home, test);
+    const a = rate(away, test);
+
+    if (h.n < 8 || a.n < 8) return false;
+    if (h.rate < 0.75 || a.rate < 0.75) return false;
+
+    results.push({
+      label,
+      homeHits: h.hits,
+      homeN: h.n,
+      awayHits: a.hits,
+      awayN: a.n,
+      frequency: Math.floor(
+        Math.min(h.rate, a.rate) * 100
+      )
+    });
+
+    return true;
+  }
+
+  for (const type of ["corners", "yellowCards", "redCards"]) {
+
+    const name = {
+      corners: "Corner",
+      yellowCards: "Cartellini gialli",
+      redCards: "Espulsioni"
+    }[type];
+
+    for (const period of ["FT", "1T", "2T"]) {
+
+      for (const side of ["Totali", "Casa", "Ospite"]) {
+
+        const total = side === "Totali";
+        let lines;
+
+        if (type === "corners") {
+          lines = period === "FT"
+            ? (total ? [7.5,8.5,9.5,10.5,11.5]
+                     : [2.5,3.5,4.5,5.5,6.5])
+            : (total ? [2.5,3.5,4.5,5.5,6.5]
+                     : [0.5,1.5,2.5,3.5]);
+
+        } else if (type === "yellowCards") {
+          lines = period === "FT"
+            ? (total ? [2.5,3.5,4.5,5.5,6.5]
+                     : [1.5,2.5,3.5])
+            : (total ? [1.5,2.5,3.5]
+                     : [1.5,2.5]);
+
+        } else {
+          lines = [0.5];
+        }
+
+        for (const line of lines.reverse()) {
+
+          const passed = evaluate(
+            name + " " + side + " " + period + " Over " + line,
+            s => {
+              const v = getValue(s, type, period, side);
+              return v === null ? null : v > line;
+            }
+          );
+
+          if (passed) break;
+        }
+      }
+
+      if (type !== "redCards") {
+
+        for (const side of ["Casa", "Ospite"]) {
+
+          evaluate(
+            side + " con più " + name + " " + period,
+            s => {
+              const h = getValue(s, type, period, "Casa");
+              const a = getValue(s, type, period, "Ospite");
+
+              if (h === null || a === null) return null;
+
+              return side === "Casa" ? h > a : a > h;
+            }
+          );
+        }
+      }
+    }
+
+    if (type !== "redCards") {
+
+      for (const period of ["1T", "2T"]) {
+
+        evaluate(
+          "Più " + name + " nel " + period,
+          s => {
+            const first = getValue(s, type, "1T", "Totali");
+            const second = getValue(s, type, "2T", "Totali");
+
+            if (first === null || second === null) return null;
+
+            return period === "1T"
+              ? first > second : second > first;
+          }
+        );
+      }
+    }
+  }
+
+  return results.sort(
+    (a, b) => b.frequency - a.frequency
+  );
+            }
 function buildMatchCornerCardPrediction(
   homeProfile,
   awayProfile
