@@ -4319,7 +4319,7 @@ changed = true;
       }
 async function buildTeamCornerCardProfile(
   teamId,
-  fixtures
+  fixtures, updateHistory = true
 ) {
   const id = Number(teamId);
 
