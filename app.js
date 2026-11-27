@@ -4444,7 +4444,7 @@ backfillCornerHistoryFromFixture(
 
   return {
     sampleSize: samples.length,
-
+anomalySamples: samples,
     cornersFor: round1(
       averageValues(
         samples.map((item) => item.cornersFor)
