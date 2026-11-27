@@ -4361,7 +4361,68 @@ async function fetchRecentTeamFixtures(teamId, last = 6) {
   }
 
   const cacheKey = `${id}-${limit}`;
+const leagueAnomalyCache = new Map();
 
+async function fetchLeagueAnomalyFixtures(leagueId, season) {
+
+  const id = Number(leagueId);
+  const year = Number(season);
+
+  if (!Number.isInteger(id) || id <= 0 ||
+      !Number.isInteger(year) || year < 2000) {
+    return [];
+  }
+
+  const key = id + "-" + year;
+
+  if (leagueAnomalyCache.has(key)) {
+    return leagueAnomalyCache.get(key);
+  }
+
+  const request = (async () => {
+
+    const url = BACKEND +
+      "/api/football?path=%2Ffixtures&league=" +
+      id + "&season=" + year;
+
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Storico campionato non disponibile");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.response) ||
+        Object.keys(data.errors || {}).length > 0) {
+      throw new Error("Dati campionato non validi");
+    }
+
+    return data.response
+      .filter(g =>
+        g?.fixture?.status?.short === "FT" &&
+        Number(g?.fixture?.timestamp) > 0 &&
+        Number(g.fixture.timestamp) * 1000 < Date.now()
+      )
+      .sort((a, b) =>
+        b.fixture.timestamp - a.fixture.timestamp
+      )
+      .slice(0, 40);
+
+  })();
+
+  leagueAnomalyCache.set(key, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    leagueAnomalyCache.delete(key);
+    console.warn(error);
+    return [];
+  }
+}
   if (recentFixturesCache.has(cacheKey)) {
     return recentFixturesCache.get(cacheKey);
   }
