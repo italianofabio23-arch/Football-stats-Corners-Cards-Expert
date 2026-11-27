@@ -4669,11 +4669,22 @@ async function enrichMatchWithCornerCardData(match) {
       return match;
     }
 
-    const [homeFixtures, awayFixtures] =
-      await Promise.all([
-        fetchRecentTeamFixtures(homeTeamId, 8),
-        fetchRecentTeamFixtures(awayTeamId, 8)
-      ]);
+  const [homeHistory, awayHistory] =
+  await Promise.all([
+    fetchRecentTeamFixtures(homeTeamId, 24),
+    fetchRecentTeamFixtures(awayTeamId, 24)
+  ]);
+
+const homeFixtures = homeHistory.slice(0, 8);
+const awayFixtures = awayHistory.slice(0, 8);
+
+const homeAnomalyFixtures = homeHistory.filter(
+  game => Number(game?.teams?.home?.id) === homeTeamId
+).slice(0, 10);
+
+const awayAnomalyFixtures = awayHistory.filter(
+  game => Number(game?.teams?.away?.id) === awayTeamId
+).slice(0, 10);
 
     const [homeProfile, awayProfile] =
       await Promise.all([
