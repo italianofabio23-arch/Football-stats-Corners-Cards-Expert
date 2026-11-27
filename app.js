@@ -4167,7 +4167,7 @@ const recentFixturesCache = new Map();
 
 async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
-  const limit = Math.max(1, Math.min(10, Number(last) || 6));
+  const limit = Math.max(1, Math.min(24, Number(last) || 6));
 
   if (!Number.isFinite(id) || id <= 0) {
     return [];
