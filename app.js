@@ -4940,6 +4940,10 @@ const yellowCardCandidates = [
   .slice(0, 2);
     return {
       ...match,
+realAnomalies: buildRealAnomalies(
+  homeAnomalyProfile,
+  awayAnomalyProfile
+),
 cornerCardPrediction,
      yellowCardCandidates,
        cornerCardConfidence: {
