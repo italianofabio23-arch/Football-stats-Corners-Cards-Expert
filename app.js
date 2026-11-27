@@ -2013,11 +2013,24 @@ updatePredictionHistoryResults()
 
     
 const anomalyMatches = matches
-  .filter(m => Array.isArray(m.realAnomalies) &&
-               m.realAnomalies.length > 0)
+  .map(m => ({
+    ...m,
+    realAnomalies: (m.realAnomalies || [])
+      .filter(a =>
+        a.leagueConfirmed === true &&
+        a.leagueN >= 25
+      )
+      .sort((a, b) =>
+        b.frequency - a.frequency ||
+        b.leagueGap - a.leagueGap
+      )
+  }))
+  .filter(m => m.realAnomalies.length > 0)
   .sort((a, b) =>
     b.realAnomalies[0].frequency -
-    a.realAnomalies[0].frequency
+    a.realAnomalies[0].frequency ||
+    b.realAnomalies[0].leagueGap -
+    a.realAnomalies[0].leagueGap
   );
 
 const anomalyCount = anomalyMatches.reduce(
