@@ -4099,7 +4099,51 @@ function parseCornerCardStatistics(
     "Red Cards"
   );
 
+    function readRealStat(row, field, type) {
+    const list = row?.[field];
+
+    if (!Array.isArray(list)) return null;
+
+    const item = list.find(s => s.type === type);
+
+    if (item?.value == null || item.value === "") {
+      return null;
+    }
+
+    const value = Number(item.value);
+
+    return Number.isInteger(value) && value >= 0
+      ? value
+      : null;
+  }
+
+  function readHalfPair(row, type) {
+    const first = readRealStat(row, "statistics_1h", type);
+    const second = readRealStat(row, "statistics_2h", type);
+    const full = readRealStat(row, "statistics", type);
+
+    if (first === null || second === null || full === null) {
+      return null;
+    }
+
+    if (first + second !== full) return null;
+
+    return [first, second];
+  }
+
   return {
+    halves: {
+      home: {
+        corners: readHalfPair(home, "Corner Kicks"),
+        yellowCards: readHalfPair(home, "Yellow Cards"),
+        redCards: readHalfPair(home, "Red Cards")
+      },
+      away: {
+        corners: readHalfPair(away, "Corner Kicks"),
+        yellowCards: readHalfPair(away, "Yellow Cards"),
+        redCards: readHalfPair(away, "Red Cards")
+      }
+    },
     home: {
       corners: homeCorners,
       yellowCards: homeYellow,
