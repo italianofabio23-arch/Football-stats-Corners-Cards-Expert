@@ -4905,12 +4905,29 @@ function buildRealAnomalies(homeProfile, awayProfile) {
     };
   }
 
-  function evaluate(label, test) {
+    function evaluate(label, test) {
     const h = rate(home, test);
     const a = rate(away, test);
 
     if (h.n < 8 || a.n < 8) return false;
     if (h.rate < 0.75 || a.rate < 0.75) return false;
+
+    const usedIds = new Set(
+      [...home, ...away].map(s => s.fixtureId)
+    );
+
+    const independentLeague = leagueSamples.filter(
+      s => !usedIds.has(s.fixtureId)
+    );
+
+    const l = rate(independentLeague, test);
+    const minimum = Math.min(h.rate, a.rate);
+
+    const leagueValid = l.n >= 25;
+
+    const leagueGap = leagueValid
+      ? Math.round((minimum - l.rate) * 100)
+      : null;
 
     results.push({
       label,
@@ -4918,13 +4935,24 @@ function buildRealAnomalies(homeProfile, awayProfile) {
       homeN: h.n,
       awayHits: a.hits,
       awayN: a.n,
-      frequency: Math.floor(
-        Math.min(h.rate, a.rate) * 100
-      )
+
+      frequency: Math.floor(minimum * 100),
+
+      leagueHits: l.hits,
+      leagueN: l.n,
+
+      leagueFrequency: leagueValid
+        ? Math.round(l.rate * 100)
+        : null,
+
+      leagueGap,
+
+      leagueConfirmed:
+        leagueValid && minimum - l.rate >= 0.15
     });
 
     return true;
-  }
+    }
 
   for (const type of ["corners", "yellowCards", "redCards"]) {
 
