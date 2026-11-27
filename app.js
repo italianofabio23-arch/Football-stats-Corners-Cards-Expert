@@ -4415,6 +4415,115 @@ async function fetchLeagueAnomalyFixtures(leagueId, season) {
     return [];
   }
 }
+const leagueAnomalySamplesCache = new Map();
+
+async function buildLeagueAnomalySamples(leagueId, season) {
+
+  const key = leagueId + "-" + season;
+
+  if (leagueAnomalySamplesCache.has(key)) {
+    return leagueAnomalySamplesCache.get(key);
+  }
+
+  const request = (async () => {
+
+    const fixtures = await fetchLeagueAnomalyFixtures(
+      leagueId, season
+    );
+
+    const samples = [];
+    const seen = new Set();
+
+    function read(row, type) {
+      const list = row?.statistics;
+
+      if (!Array.isArray(list)) return null;
+
+      const item = list.find(s => s?.type === type);
+
+      if (item?.value == null || item.value === "") {
+        return null;
+      }
+
+      const n = Number(item.value);
+
+      return Number.isInteger(n) && n >= 0
+        ? n : null;
+    }
+
+    for (const game of fixtures) {
+
+      const fixtureId = Number(game?.fixture?.id);
+      const homeId = Number(game?.teams?.home?.id);
+      const awayId = Number(game?.teams?.away?.id);
+
+      if (!fixtureId || !homeId || !awayId ||
+          seen.has(fixtureId)) continue;
+
+      seen.add(fixtureId);
+
+      try {
+
+        const stats = await fetchFixtureStatistics(fixtureId);
+
+        const h = stats.find(
+          r => Number(r?.team?.id) === homeId
+        );
+
+        const a = stats.find(
+          r => Number(r?.team?.id) === awayId
+        );
+
+        if (!h || !a) continue;
+
+        const parsed = parseCornerCardStatistics(
+          stats, homeId, awayId
+        );
+
+        samples.push({
+          fixtureId,
+          homeId,
+          awayId,
+          isHome: true,
+
+          realCornersFor: read(h, "Corner Kicks"),
+          realCornersAgainst: read(a, "Corner Kicks"),
+
+          realYellowFor: read(h, "Yellow Cards"),
+          realYellowAgainst: read(a, "Yellow Cards"),
+
+          realRedFor: read(h, "Red Cards"),
+          realRedAgainst: read(a, "Red Cards"),
+
+          halvesFor: parsed.halves.home,
+          halvesAgainst: parsed.halves.away
+        });
+
+      } catch (error) {
+        console.warn("Statistiche campionato:", fixtureId);
+      }
+    }
+
+    return samples;
+
+  })();
+
+  leagueAnomalySamplesCache.set(key, request);
+
+  try {
+    const samples = await request;
+
+    if (samples.length < 25) {
+      leagueAnomalySamplesCache.delete(key);
+    }
+
+    return samples;
+
+  } catch (error) {
+    leagueAnomalySamplesCache.delete(key);
+    return [];
+  }
+          }
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
   const limit = Math.max(1, Math.min(24, Number(last) || 6));
