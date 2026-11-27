@@ -2012,7 +2012,96 @@ updatePredictionHistoryResults()
     `${matches.length} risultati`;
 
     
+const anomalyMatches = matches
+  .filter(m => Array.isArray(m.realAnomalies) &&
+               m.realAnomalies.length > 0)
+  .sort((a, b) =>
+    b.realAnomalies[0].frequency -
+    a.realAnomalies[0].frequency
+  );
+
+const anomalyCount = anomalyMatches.reduce(
+  (sum, m) => sum + m.realAnomalies.length, 0
+);
+
+const anomalyScannerHTML = `
+  <article class="match-card">
+
+    <h2 style="color:#22c55e;">
+      🔥 V6 SCANNER ANOMALIE REALI
+    </h2>
+
+    <div class="market-box">
+      Partite analizzate: ${matches.length}
+      <br>
+      Partite con anomalie: ${anomalyMatches.length}
+      <br>
+      Anomalie rilevate: ${anomalyCount}
+    </div>
+
+    ${anomalyMatches.length === 0
+      ? `<p>Nessuna anomalia supera i filtri.</p>`
+      : anomalyMatches.map(m => `
+
+      <div class="market-box" style="margin-top:12px;">
+
+        <strong style="font-size:17px;">
+          ⚽ ${escapeHtml(m.home)} -
+          ${escapeHtml(m.away)}
+        </strong>
+
+        <br>
+
+        <small>
+          ${escapeHtml(m.league || "")}
+          • ${escapeHtml(formatMatchDate(m.date))}
+        </small>
+
+        ${m.realAnomalies.map(a => `
+
+          <div style="
+            margin-top:10px;
+            padding:10px;
+            border-bottom:1px solid #334155;
+          ">
+
+            <strong>
+              ${escapeHtml(a.label)}
+            </strong>
+
+            <div style="
+              font-size:23px;
+              font-weight:800;
+              color:${a.frequency >= 90 ? "#38bdf8" :
+                      a.frequency >= 80 ? "#22c55e" :
+                      "#eab308"};
+            ">
+              ${a.frequency}%
+            </div>
+
+            <small>
+              🏠 ${a.homeHits}/${a.homeN}
+              • ✈️ ${a.awayHits}/${a.awayN}
+            </small>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+    `).join("")}
+
+    <small>
+      Frequenze storiche osservate.
+      Non sono probabilita future validate.
+    </small>
+
+  </article>
+`;
+
 resultsContainer.innerHTML =
+  anomalyScannerHTML +
   renderCornerCardAiAgent(matches) +
   renderCornerCardModerateSlip(matches) +
   renderHighOddsCornerCardSlip(matches) +
