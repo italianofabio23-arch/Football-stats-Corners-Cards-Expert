@@ -4352,15 +4352,7 @@ function parseCornerCardStatistics(
 }
 const recentFixturesCache = new Map();
 
-async function fetchRecentTeamFixtures(teamId, last = 6) {
-  const id = Number(teamId);
-  const limit = Math.max(1, Math.min(24, Number(last) || 6));
 
-  if (!Number.isFinite(id) || id <= 0) {
-    return [];
-  }
-
-  const cacheKey = `${id}-${limit}`;
 const leagueAnomalyCache = new Map();
 
 async function fetchLeagueAnomalyFixtures(leagueId, season) {
