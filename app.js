@@ -5325,12 +5325,34 @@ const yellowCardCandidates = [
       Number(a.yellowCardScore || 0)
   )
   .slice(0, 2);
-    return {
-      ...match,
-realAnomalies: buildRealAnomalies(
+    let realAnomalies = buildRealAnomalies(
   homeAnomalyProfile,
   awayAnomalyProfile
-),
+);
+
+if (realAnomalies.length > 0) {
+
+  try {
+
+    const leagueSamples = await buildLeagueAnomalySamples(
+      sourceGame?.league?.id,
+      sourceGame?.league?.season
+    );
+
+    realAnomalies = buildRealAnomalies(
+      homeAnomalyProfile,
+      awayAnomalyProfile,
+      leagueSamples
+    );
+
+  } catch (error) {
+    console.warn("Confronto campionato non disponibile");
+  }
+}
+
+return {
+  ...match,
+  realAnomalies,
 anomalyDebug: {
   homeFound: homeAnomalyFixtures.length,
   awayFound: awayAnomalyFixtures.length,
