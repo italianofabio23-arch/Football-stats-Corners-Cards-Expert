@@ -1763,6 +1763,24 @@ match.yellowCardCandidates.length > 0 ? `
     </div>
   </div>
 ` : ""}
+<div class="market-box" style="grid-column:1 / -1;">
+  <span>🔍 DIAGNOSI NUOVO MOTORE</span>
+  <div class="market-value">
+    Casa trovate: ${match.anomalyDebug?.homeFound ?? "-"}
+    <br>
+    Ospite trovate: ${match.anomalyDebug?.awayFound ?? "-"}
+    <br>
+    Casa valide: ${match.anomalyDebug?.homeValid ?? "-"}
+    <br>
+    Ospite valide: ${match.anomalyDebug?.awayValid ?? "-"}
+    <br>
+    Casa dati corner 1T/2T: ${match.anomalyDebug?.homeHalves ?? "-"}
+    <br>
+    Ospite dati corner 1T/2T: ${match.anomalyDebug?.awayHalves ?? "-"}
+    <br>
+    Anomalie trovate: ${match.realAnomalies?.length || 0}
+  </div>
+</div>
 ${Array.isArray(match.realAnomalies) &&
 match.realAnomalies.length > 0 ? `
 
