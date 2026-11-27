@@ -5666,9 +5666,38 @@ if (realAnomalies.length > 0) {
   }
 }
 
+    let refereeAnalysis = null;
+
+const refereeName = sourceGame?.fixture?.referee || "";
+
+const hasCardAnomalies = realAnomalies.some(a =>
+  /cartellini|espulsioni/i.test(a.label)
+);
+
+if (refereeName && hasCardAnomalies) {
+
+  try {
+
+    const refereeProfile =
+      await buildRefereeAnomalyProfile(
+        sourceGame?.league?.id,
+        sourceGame?.league?.season,
+        refereeName
+      );
+
+    refereeAnalysis =
+      summarizeRefereeProfile(refereeProfile);
+
+  } catch (error) {
+    console.warn("Analisi arbitro non disponibile");
+  }
+}
+
 return {
   ...match,
   realAnomalies,
+  refereeName,
+  refereeAnalysis,
 anomalyDebug: {
   homeFound: homeAnomalyFixtures.length,
   awayFound: awayAnomalyFixtures.length,
