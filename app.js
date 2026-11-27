@@ -4697,7 +4697,24 @@ const awayAnomalyFixtures = awayHistory.filter(
           awayFixtures
         )
       ]);
+const [homeAnomalyProfile, awayAnomalyProfile] =
+  await Promise.all([
+    homeAnomalyFixtures.length >= 8
+      ? buildTeamCornerCardProfile(
+          homeTeamId,
+          homeAnomalyFixtures,
+          false
+        )
+      : Promise.resolve(null),
 
+    awayAnomalyFixtures.length >= 8
+      ? buildTeamCornerCardProfile(
+          awayTeamId,
+          awayAnomalyFixtures,
+          false
+        )
+      : Promise.resolve(null)
+  ]);
     const cornerCardPrediction =
       buildMatchCornerCardPrediction(
         homeProfile,
