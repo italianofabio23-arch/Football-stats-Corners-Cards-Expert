@@ -4693,6 +4693,153 @@ async function buildRefereeAnomalyProfile(
     return null;
   }
 }
+function summarizeRefereeProfile(profile) {
+
+  if (!profile) return null;
+
+  const samples = profile.samples || [];
+
+  function valid(n) {
+    return Number.isInteger(n) && n >= 0;
+  }
+
+  function getValue(s, type, period, side) {
+
+    if (side === "total") {
+      const h = getValue(s, type, period, "home");
+      const a = getValue(s, type, period, "away");
+
+      return valid(h) && valid(a) ? h + a : null;
+    }
+
+    const own = side === "home";
+
+    if (period === "FT") {
+      const key = type === "yellowCards"
+        ? "realYellow" : "realRed";
+
+      return s[key + (own ? "For" : "Against")];
+    }
+
+    const halves = own
+      ? s.halvesFor : s.halvesAgainst;
+
+    return halves?.[type]?.[period === "1T" ? 0 : 1];
+  }
+
+  function summarize(values, lines) {
+
+    const data = values.filter(valid);
+    const n = data.length;
+
+    if (n < 8) {
+      return {
+        n,
+        mean: null,
+        markets: []
+      };
+    }
+
+    return {
+      n,
+
+      mean: Number((
+        data.reduce((sum, v) => sum + v, 0) / n
+      ).toFixed(2)),
+
+      markets: lines.map(line => {
+
+        const hits = data.filter(v => v > line).length;
+
+        return {
+          line,
+          hits,
+          n,
+          frequency: Math.round(hits / n * 100)
+        };
+      })
+    };
+  }
+
+  const periods = {};
+
+  for (const period of ["FT", "1T", "2T"]) {
+
+    periods[period] = {};
+
+    for (const side of ["total", "home", "away"]) {
+
+      const lines = period === "FT"
+        ? (side === "total"
+          ? [2.5,3.5,4.5,5.5,6.5]
+          : [1.5,2.5,3.5])
+        : (side === "total"
+          ? [1.5,2.5,3.5]
+          : [1.5,2.5]);
+
+      periods[period][side] = {
+
+        yellow: summarize(
+          samples.map(s =>
+            getValue(s, "yellowCards", period, side)
+          ),
+          lines
+        ),
+
+        red: summarize(
+          samples.map(s =>
+            getValue(s, "redCards", period, side)
+          ),
+          [0.5]
+        )
+      };
+    }
+  }
+
+  const comparisons = samples.map(s => {
+
+    const first = getValue(
+      s, "yellowCards", "1T", "total"
+    );
+
+    const second = getValue(
+      s, "yellowCards", "2T", "total"
+    );
+
+    if (!valid(first) || !valid(second)) return null;
+
+    return second > first ? 2 :
+           first > second ? 1 : 0;
+
+  }).filter(v => v !== null);
+
+  const n = comparisons.length;
+
+  return {
+    referee: profile.referee,
+    sampleSize: samples.length,
+    periods,
+
+    moreCards: {
+      n,
+
+      first: n >= 8
+        ? Math.round(
+          comparisons.filter(v => v === 1).length / n * 100
+        ) : null,
+
+      second: n >= 8
+        ? Math.round(
+          comparisons.filter(v => v === 2).length / n * 100
+        ) : null,
+
+      equal: n >= 8
+        ? Math.round(
+          comparisons.filter(v => v === 0).length / n * 100
+        ) : null
+    }
+  };
+}
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
   const limit = Math.max(1, Math.min(24, Number(last) || 6));
