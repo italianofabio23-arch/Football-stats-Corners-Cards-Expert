@@ -4454,7 +4454,7 @@ async function fetchLeagueAnomalyFixtures(leagueId, season) {
       .sort((a, b) =>
         b.fixture.timestamp - a.fixture.timestamp
       )
-      .slice(0, 40);
+      ;
 
   })();
 
@@ -4482,7 +4482,7 @@ async function buildLeagueAnomalySamples(leagueId, season) {
 
     const fixtures = await fetchLeagueAnomalyFixtures(
       leagueId, season
-    );
+    ).slice(0, 40);
 
     const samples = [];
     const seen = new Set();
