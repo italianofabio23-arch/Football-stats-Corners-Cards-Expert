@@ -5768,15 +5768,52 @@ if (refereeName && hasCardAnomalies) {
 
   try {
 
-    const refereeProfile =
-      await buildRefereeAnomalyProfile(
-        sourceGame?.league?.id,
-        sourceGame?.league?.season,
-        refereeName
-      );
+    const currentLeague = Number(sourceGame?.league?.id);
+const season = sourceGame?.league?.season;
 
-    refereeAnalysis =
-      summarizeRefereeProfile(refereeProfile);
+let refereeProfile = await buildRefereeAnomalyProfile(
+  currentLeague,
+  season,
+  refereeName
+);
+
+let selectedLeague = currentLeague;
+
+const countValid = profile =>
+  (profile?.samples || []).filter(s =>
+    Number.isInteger(s.realYellowFor) &&
+    Number.isInteger(s.realYellowAgainst)
+  ).length;
+
+if (countValid(refereeProfile) < 8 &&
+    [71, 72].includes(currentLeague)) {
+
+  const alternateLeague =
+    currentLeague === 72 ? 71 : 72;
+
+  const alternateProfile =
+    await buildRefereeAnomalyProfile(
+      alternateLeague,
+      season,
+      refereeName
+    );
+
+  if (countValid(alternateProfile) >
+      countValid(refereeProfile)) {
+
+    refereeProfile = alternateProfile;
+    selectedLeague = alternateLeague;
+  }
+}
+
+refereeAnalysis =
+  summarizeRefereeProfile(refereeProfile);
+
+if (refereeAnalysis) {
+  refereeAnalysis.sourceLeagueId = selectedLeague;
+  refereeAnalysis.externalLeague =
+    selectedLeague !== currentLeague;
+}
 
   } catch (error) {
     console.warn("Analisi arbitro non disponibile");
