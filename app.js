@@ -4577,6 +4577,122 @@ async function buildLeagueAnomalySamples(leagueId, season) {
     return [];
   }
           }
+const refereeAnomalyCache = new Map();
+
+async function buildRefereeAnomalyProfile(
+  leagueId, season, referee
+) {
+
+  const normalize = value =>
+    String(value || "").trim().toLowerCase()
+      .replace(/\s+/g, " ");
+
+  const name = normalize(referee);
+
+  if (!name || !leagueId || !season) return null;
+
+  const key = leagueId + "-" + season + "-" + name;
+
+  if (refereeAnomalyCache.has(key)) {
+    return refereeAnomalyCache.get(key);
+  }
+
+  const request = (async () => {
+
+    const history = await fetchLeagueAnomalyFixtures(
+      leagueId, season
+    );
+
+    const fixtures = history.filter(g =>
+      normalize(g?.fixture?.referee) === name
+    ).slice(0, 12);
+
+    const samples = [];
+    const seen = new Set();
+
+    function read(row, type) {
+
+      const item = row?.statistics?.find(
+        s => s?.type === type
+      );
+
+      if (item?.value == null || item.value === "") {
+        return null;
+      }
+
+      const n = Number(item.value);
+
+      return Number.isInteger(n) && n >= 0
+        ? n : null;
+    }
+
+    for (const game of fixtures) {
+
+      const fixtureId = Number(game?.fixture?.id);
+      const homeId = Number(game?.teams?.home?.id);
+      const awayId = Number(game?.teams?.away?.id);
+
+      if (!fixtureId || !homeId || !awayId ||
+          seen.has(fixtureId)) continue;
+
+      seen.add(fixtureId);
+
+      try {
+
+        const stats = await fetchFixtureStatistics(
+          fixtureId
+        );
+
+        const h = stats.find(
+          r => Number(r?.team?.id) === homeId
+        );
+
+        const a = stats.find(
+          r => Number(r?.team?.id) === awayId
+        );
+
+        if (!h || !a) continue;
+
+        const parsed = parseCornerCardStatistics(
+          stats, homeId, awayId
+        );
+
+        samples.push({
+          fixtureId,
+          isHome: true,
+
+          realYellowFor: read(h, "Yellow Cards"),
+          realYellowAgainst: read(a, "Yellow Cards"),
+
+          realRedFor: read(h, "Red Cards"),
+          realRedAgainst: read(a, "Red Cards"),
+
+          halvesFor: parsed.halves.home,
+          halvesAgainst: parsed.halves.away
+        });
+
+      } catch (error) {
+        console.warn("Storico arbitro:", fixtureId);
+      }
+    }
+
+    return {
+      referee,
+      sampleSize: samples.length,
+      samples
+    };
+
+  })();
+
+  refereeAnomalyCache.set(key, request);
+
+  try {
+    return await request;
+  } catch (error) {
+    refereeAnomalyCache.delete(key);
+    return null;
+  }
+}
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
   const limit = Math.max(1, Math.min(24, Number(last) || 6));
