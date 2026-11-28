@@ -3254,106 +3254,6 @@ if (picks.length < 5) {
   <button type="button"
     style="padding:10px;background:#2563eb;color:white;border-radius:8px;"
     onclick="(async (btn) => {
-      const out = btn.nextElementSibling;
-      btn.disabled = true;
-      out.textContent = 'Controllo API in corso...';
-
-      try {
-        const history = JSON.parse(
-          localStorage.getItem(
-            'corner_cards_prediction_history_v1'
-          ) || '[]'
-        );
-
-        
-const item = history
-  .filter(x =>
-    x.status === 'pending' &&
-    Number(x.fixtureId) > 0 &&
-    Number.isFinite(Date.parse(x.date || ''))
-  )
-  .sort((a, b) =>
-    Date.parse(a.date) - Date.parse(b.date)
-  )[0];
-  
-
-      
-if (!item) {
-  const pending = history.filter(x =>
-    x.status === 'pending'
-  );
-
-  const validIds = pending.filter(x =>
-    Number(x.fixtureId) > 0
-  ).length;
-
-  const validDates = pending.filter(x =>
-    Number.isFinite(Date.parse(x.date || ''))
-  ).length;
-
-  const both = pending.filter(x =>
-    Number(x.fixtureId) > 0 &&
-    Number.isFinite(Date.parse(x.date || ''))
-  ).length;
-
-  const first = pending[0] || {};
-
-  out.textContent =
-    'In attesa: ' + pending.length +
-    ' | ID validi: ' + validIds +
-    ' | Date valide: ' + validDates +
-    ' | Entrambi: ' + both +
-    ' | Primo ID: ' + String(first.fixtureId ?? 'assente') +
-    ' | Prima data: ' + String(first.date || 'assente');
-
-  return;
-}
-
-
-        const base =
-          'https://football-stats-v3.onrender.com/api/football';
-
-        
-const fixtureDate = String(item.date || '').slice(0, 10);
-
-const games = await fetchFixturesByDate(fixtureDate);
-
-const fixture = games.find(game =>
-  Number(game?.fixture?.id) === Number(item.fixtureId)
-);
-
-const status =
-  fixture?.fixture?.status?.short || 'ASSENTE';
-
-out.textContent =
-  'ID: ' + item.fixtureId +
-  ' | Data: ' + fixtureDate +
-  ' | Partite trovate: ' + games.length +
-  ' | Stato: ' + status;
-
-if (!['FT', 'AET', 'PEN'].includes(status)) {
-  return;
-}
-
-        const statsResponse = await fetch(
-          base + '?path=%2Ffixtures%2Fstatistics&amp;fixture=' +
-          encodeURIComponent(item.fixtureId),
-          { cache: 'no-store' }
-        );
-
-        const statsData = await statsResponse.json();
-        const teams = Array.isArray(statsData.response)
-          ? statsData.response : [];
-
-        const types = teams.flatMap(t =>
-          (t.statistics || []).map(s => s.type)
-        );
-
-        out.textContent +=
-          ' | Stats HTTP: ' + statsResponse.status +
-          ' | Squadre: ' + teams.length +
-          ' | Corner: ' + types.includes('Corner Kicks') +
-            onclick="(async (btn) => {
       btn.disabled = true;
       const out = btn.nextElementSibling;
       out.textContent = 'Diagnostica aggiornamento...';
@@ -3361,7 +3261,7 @@ if (!['FT', 'AET', 'PEN'].includes(status)) {
         const d = await updatePredictionHistoryResults();
         const target = document.getElementById('v6HistoryDiagnostic') || out;
         target.textContent =
-          'Arretrati: ' + d.due +
+          'Mercati arretrati: ' + d.due +
           ' | Trovati: ' + d.found +
           ' | FT: ' + d.finished +
           ' | Stats: ' + d.stats +
@@ -3378,7 +3278,6 @@ if (!['FT', 'AET', 'PEN'].includes(status)) {
     })(this)">
     🧪 TEST API RISULTATI
   </button>
-
   <div id="v6HistoryDiagnostic" style="margin-top:10px;font-size:13px;overflow-wrap:anywhere;">
     Premi il pulsante per verificare lo storico.
   </div>
