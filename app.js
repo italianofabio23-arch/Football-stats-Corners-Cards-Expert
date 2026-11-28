@@ -437,8 +437,26 @@ windowButtons.forEach((button) => {
   });
 });
 // Avvia la ricerca quando premi "Cerca partite"
+let anomalyCacheRefreshAt = 0;
+
+function refreshAnomalyCaches() {
+  const now = Date.now();
+
+  if (now - anomalyCacheRefreshAt < 10 * 60 * 1000) {
+    return;
+  }
+
+  leagueAnomalyCache.clear();
+  leagueAnomalySamplesCache.clear();
+  refereeAnomalyCache.clear();
+  h2hFixturesCache.clear();
+
+  anomalyCacheRefreshAt = now;
+}
+
 searchBtn.addEventListener("click", async () => {
   showLoading();
+  refreshAnomalyCaches();
 
   try {
     const selectedLeagues = getSelectedLeagues();
