@@ -4028,7 +4028,7 @@ const fixturePlayersCache = new Map();
 async function fetchFixturePlayers(fixtureId) {
   const id = Number(fixtureId);
 
-  if (!Number.isFinite(id) || id <= 0) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return [];
   }
 
@@ -4036,40 +4036,43 @@ async function fetchFixturePlayers(fixtureId) {
     return fixturePlayersCache.get(id);
   }
 
-  try {
-    const url =
-      `${BACKEND}/api/football?path=/fixtures/players&fixture=${id}`;
+  const request = (async () => {
+    try {
+      const url =
+        BACKEND + "/api/football?path=/fixtures/players&fixture=" + id;
 
-    const response = await fetch(url, {
-      cache: "no-store"
-    });
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        `Errore giocatori fixture ${response.status}`
-      );
+      if (!response.ok) {
+        throw new Error("Giocatori HTTP " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (Object.keys(data.errors || {}).length) {
+        throw new Error("Errore API giocatori");
+      }
+
+      return Array.isArray(data.response)
+        ? data.response : [];
+
+    } catch (error) {
+      console.warn("Dati giocatori non disponibili:", id, error);
+      return [];
     }
+  })();
 
-    const data = await response.json();
+  fixturePlayersCache.set(id, request);
 
-    const players = Array.isArray(data.response)
-      ? data.response
-      : [];
+  const players = await request;
 
-    fixturePlayersCache.set(id, players);
-
-    return players;
-
-  } catch (error) {
-    console.warn(
-      "Dati giocatori non disponibili:",
-      id,
-      error
-    );
-
-    fixturePlayersCache.set(id, []);
-    return [];
+  if (players.length === 0) {
+    fixturePlayersCache.delete(id);
   }
+
+  return players;
 }
 // ==========================================
 // PROFILO GIOCATORE - FALLI E CARTELLINI
