@@ -3371,11 +3371,25 @@ if (!['FT', 'AET', 'PEN'].includes(status)) {
           ' | Stats HTTP: ' + statsResponse.status +
           ' | Squadre: ' + teams.length +
           ' | Corner: ' + types.includes('Corner Kicks') +
-          ' | Gialli: ' + types.includes('Yellow Cards');
-
-      } catch (error) {
-        out.textContent =
-          'Errore richiesta: ' + error.message;
+            onclick="(async (btn) => {
+      btn.disabled = true;
+      const out = btn.nextElementSibling;
+      out.textContent = 'Diagnostica aggiornamento...';
+      try {
+        const d = await updatePredictionHistoryResults();
+        const target = document.getElementById('v6HistoryDiagnostic') || out;
+        target.textContent =
+          'Arretrati: ' + d.due +
+          ' | Trovati: ' + d.found +
+          ' | FT: ' + d.finished +
+          ' | Stats: ' + d.stats +
+          ' | Invalidi: ' + d.invalid +
+          ' | Errori: ' + d.errors +
+          ' | Salvati ora: ' + d.saved +
+          ' | Pre-match verificati: ' + d.verified +
+          ' | Primo problema: ' + (d.firstIssue || 'nessuno');
+      } catch (e) {
+        out.textContent = 'Errore: ' + e.message;
       } finally {
         btn.disabled = false;
       }
@@ -3383,8 +3397,8 @@ if (!['FT', 'AET', 'PEN'].includes(status)) {
     🧪 TEST API RISULTATI
   </button>
 
-  <div style="margin-top:10px;font-size:13px;overflow-wrap:anywhere;">
-    Premi il pulsante per verificare una partita.
+  <div id="v6HistoryDiagnostic" style="margin-top:10px;font-size:13px;overflow-wrap:anywhere;">
+    Premi il pulsante per verificare lo storico.
   </div>
 </div>
 
