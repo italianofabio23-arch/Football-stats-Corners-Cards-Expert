@@ -280,35 +280,30 @@ for (const item of history) {
   try {
         const cacheKey = String(item.fixtureId);
 
-    if (!fixtureCache.has(cacheKey)) {
-      const url =
-        `${BACKEND}/api/football?path=%2Ffixtures&id=${encodeURIComponent(cacheKey)}`;
+        if (!fixtureCache.has(cacheKey)) {
 
-      const response = await fetch(url, {
-        cache: "no-store"
-      });
+      const fixtureDate =
+        String(item.date || "").slice(0, 10);
 
-      if (!response.ok) {
-        throw new Error(
-          `Errore ricerca ID ${response.status}`
+      const dateKey = "date:" + fixtureDate;
+
+      if (!fixtureCache.has(dateKey)) {
+        const games = await fetchFixturesByDate(
+          fixtureDate
         );
+
+        fixtureCache.set(dateKey, games);
       }
 
-      const data = await response.json();
+      const games = fixtureCache.get(dateKey);
 
-      if (data.errors && Object.keys(data.errors).length) {
-        throw new Error("Errore API ricerca ID");
-      }
-
-      const found = Array.isArray(data.response)
-        ? data.response.find(game =>
-            Number(game?.fixture?.id) ===
-            Number(item.fixtureId)
-          ) || null
-        : null;
+      const found = games.find(game =>
+        Number(game?.fixture?.id) ===
+        Number(item.fixtureId)
+      ) || null;
 
       fixtureCache.set(cacheKey, found);
-    }
+        }
 
     const fixture = fixtureCache.get(cacheKey);
 
