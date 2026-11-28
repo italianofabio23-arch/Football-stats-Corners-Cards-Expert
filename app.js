@@ -246,191 +246,173 @@ if (existingIndex === -1) {
 
 savePredictionHistory(history);
 }
-async function updatePredictionHistoryResults() {
+let historyUpdateInFlight = null;
+
+function updatePredictionHistoryResults() {
+  if (historyUpdateInFlight) return historyUpdateInFlight;
+  historyUpdateInFlight = runHistoryResultsDiagnostic()
+    .finally(() => { historyUpdateInFlight = null; });
+  return historyUpdateInFlight;
+}
+
+async function runHistoryResultsDiagnostic() {
   const history = loadPredictionHistory();
+  const cache = new Map();
+  const updates = new Map();
+  const d = {
+    due: 0, found: 0, finished: 0, stats: 0,
+    invalid: 0, errors: 0, saved: 0, verified: 0,
+    firstIssue: ""
+  };
 
-  if (!history.length) {
-    return;
+  function issue(item, message) {
+    if (!d.firstIssue) {
+      d.firstIssue = item.fixtureId + ": " + message;
+    }
   }
 
-  
-let changed = false;
-const fixtureCache = new Map();
-
-for (const item of history) {
-  if (
-    item.status === "settled" ||
-    !item.fixtureId
-  ) {
-    continue;
-  }
-
-  // V6: controlla solo partite con tempo
-  // sufficiente per essere terminate.
-  const kickoffTime = Date.parse(item.date || "");
-
-  if (
-    !Number.isFinite(kickoffTime) ||
-    Date.now() < kickoffTime + 3 * 60 * 60 * 1000
-  ) {
-    continue;
-  }
-
-  
-  try {
-        const cacheKey = String(item.fixtureId);
-
-        if (!fixtureCache.has(cacheKey)) {
-
-      const fixtureDate =
-        String(item.date || "").slice(0, 10);
-
-      const dateKey = "date:" + fixtureDate;
-
-      if (!fixtureCache.has(dateKey)) {
-        const games = await fetchFixturesByDate(
-          fixtureDate
+  function get(key, path, params) {
+    if (!cache.has(key)) {
+      cache.set(key, (async () => {
+        const query = Object.entries({ path, ...params })
+          .map(([k, v]) => encodeURIComponent(k) + "=" +
+                          encodeURIComponent(v)).join("&");
+        const response = await fetch(
+          BACKEND + "/api/football?" + query,
+          { cache: "no-store" }
         );
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const data = await response.json();
+        if (Object.keys(data.errors || {}).length) {
+          throw new Error(JSON.stringify(data.errors));
+        }
+        if (!Array.isArray(data.response)) {
+          throw new Error("Risposta API non valida");
+        }
+        return data.response;
+      })());
+    }
+    return cache.get(key);
+  }
 
-        fixtureCache.set(dateKey, games);
+  const markets = {
+    corner: ["Corner Kicks", "total"],
+    cards: ["Yellow Cards", "total"],
+    "corner-home": ["Corner Kicks", "home"],
+    "corner-away": ["Corner Kicks", "away"],
+    "cards-home": ["Yellow Cards", "home"],
+    "cards-away": ["Yellow Cards", "away"]
+  };
+
+  for (const item of history) {
+    const kickoff = Date.parse(item.date || "");
+    if (item.status !== "pending" ||
+        !Number.isFinite(kickoff) ||
+        Date.now() < kickoff + 10800000) continue;
+
+    d.due++;
+    let stage = "Ricerca partita";
+
+    try {
+      const id = Number(item.fixtureId);
+      if (!id || !item.id) {
+        d.invalid++;
+        issue(item, "ID mancante");
+        continue;
       }
 
-      const games = fixtureCache.get(dateKey);
+      const date = String(item.date).slice(0, 10);
+      const games = await get("date:" + date, "/fixtures", { date });
+      const fixture = games.find(g => Number(g?.fixture?.id) === id);
 
-      const found = games.find(game =>
-        Number(game?.fixture?.id) ===
-        Number(item.fixtureId)
-      ) || null;
+      if (!fixture) {
+        issue(item, "Partita assente");
+        continue;
+      }
+      d.found++;
 
-      fixtureCache.set(cacheKey, found);
-        }
+      const status = fixture?.fixture?.status?.short;
+      if (status !== "FT") {
+        issue(item, "Stato " + status);
+        continue;
+      }
+      d.finished++;
 
-    const fixture = fixtureCache.get(cacheKey);
+      stage = "Statistiche";
+      const rows = await get("stats:" + id, "/fixtures/statistics",
+        { fixture: String(id) });
 
-    if (!fixture) {
-      continue;
+      if (rows.length < 2) {
+        issue(item, "Statistiche insufficienti");
+        continue;
+      }
+      d.stats++;
+
+      stage = "Calcolo mercato";
+      const config = markets[item.type];
+      const home = Number(fixture?.teams?.home?.id);
+      const away = Number(fixture?.teams?.away?.id);
+      if (!config || !home || !away || item.line == null ||
+          !Number.isFinite(Number(item.line))) {
+        d.invalid++;
+        issue(item, "Mercato o ID squadra non valido: " + item.type);
+        continue;
+      }
+
+      const [name, side] = config;
+      const ids = side === "home" ? [home] :
+                  side === "away" ? [away] : [home, away];
+
+      const values = ids.map(teamId => {
+        const row = rows.find(r => Number(r?.team?.id) === teamId);
+        const stat = (row?.statistics || []).find(s =>
+          String(s?.type || "").toLowerCase() === name.toLowerCase()
+        );
+        return stat?.value == null || stat.value === ""
+          ? NaN : Number(stat.value);
+      });
+
+      if (values.some(v => !Number.isInteger(v) || v < 0)) {
+        d.invalid++;
+        issue(item, "Valori mancanti: " + name + " " + side);
+        continue;
+      }
+
+      const result = values.reduce((sum, v) => sum + v, 0);
+      updates.set(item.id, {
+        result,
+        won: result > Number(item.line),
+        status: "settled",
+        settledAt: new Date().toISOString()
+      });
+
+    } catch (error) {
+      d.errors++;
+      issue(item, stage + ": " + error.message);
     }
-    
-    
-      const status =
-        fixture?.fixture?.status?.short || "";
-
-      // Valutiamo solamente partite terminate
-if (!["FT", "AET", "PEN"].includes(status)) {
-  continue;
-}
-
-
-
-const statsKey = "stats:" + cacheKey;
-
-if (!fixtureCache.has(statsKey)) {
-  const request = (async () => {
-    const url = BACKEND +
-      "/api/football?path=%2Ffixtures%2Fstatistics" +
-      "&fixture=" + encodeURIComponent(cacheKey);
-
-    const response = await fetch(url, {
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      throw new Error("Statistiche FT HTTP " + response.status);
-    }
-
-    const data = await response.json();
-
-    if (Object.keys(data.errors || {}).length > 0) {
-      throw new Error("Errore API statistiche FT");
-    }
-
-    return Array.isArray(data.response)
-      ? data.response : [];
-  })();
-
-  fixtureCache.set(statsKey, request);
-}
-
-const rows = await fixtureCache.get(statsKey);
-
-if (!Array.isArray(rows) || rows.length < 2) {
-  continue;
-}
-    
-      
-
-
-const marketTypes = {
-  "corner": ["Corner Kicks", "total"],
-  "cards": ["Yellow Cards", "total"],
-  "corner-home": ["Corner Kicks", "home"],
-  "corner-away": ["Corner Kicks", "away"],
-  "cards-home": ["Yellow Cards", "home"],
-  "cards-away": ["Yellow Cards", "away"]
-};
-
-const config = marketTypes[item.type];
-
-if (!config) continue;
-
-const [statName, side] = config;
-
-const homeId = Number(fixture?.teams?.home?.id);
-const awayId = Number(fixture?.teams?.away?.id);
-
-if (!homeId || !awayId) continue;
-
-const ids =
-  side === "home" ? [homeId] :
-  side === "away" ? [awayId] :
-  [homeId, awayId];
-
-const values = ids.map((id) => {
-  const row = rows.find(
-    (r) => Number(r?.team?.id) === id
-  );
-
-  const stat = (row?.statistics || []).find(
-    (s) => String(s?.type || "").toLowerCase() ===
-      statName.toLowerCase()
-  );
-
-  if (stat?.value == null || stat.value === "") {
-    return NaN;
   }
 
-  return Number(stat.value);
-});
+  if (updates.size) {
+    const latest = loadPredictionHistory();
+    for (const item of latest) {
+      if (item.status === "pending" && updates.has(item.id)) {
+        Object.assign(item, updates.get(item.id));
+      }
+    }
+    savePredictionHistory(latest);
+  }
 
-if (values.some((v) =>
-  !Number.isFinite(v) || v < 0
-)) continue;
-
-const finalValue = values.reduce(
-  (sum, value) => sum + value, 0
-);
-      
-
-item.result = finalValue;
-item.won = finalValue > Number(item.line);
-item.status = "settled";
-item.settledAt = new Date().toISOString();
-
-changed = true;
-
-} catch (error) {
-  console.warn(
-    "Errore aggiornamento storico:",
-    item.fixtureId,
-    error
-  );
-}
-}
-
-if (changed) {
-  savePredictionHistory(history);
-}
-}
+  const saved = loadPredictionHistory();
+  d.saved = saved.filter(x =>
+    updates.has(x.id) && x.status === "settled").length;
+  d.verified = saved.filter(x =>
+    x.status === "settled" &&
+    x.source !== "historical-backfill" &&
+    typeof x.won === "boolean" &&
+    Date.parse(x.createdAt) < Date.parse(x.date)
+  ).length;
+  return d;
+  }
 // Selezione strategia
 presetButtons.forEach((button) => {
   button.addEventListener("click", () => {
