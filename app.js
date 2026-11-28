@@ -3971,7 +3971,7 @@ const fixtureStatsCache = new Map();
 async function fetchFixtureStatistics(fixtureId) {
   const id = Number(fixtureId);
 
-  if (!Number.isFinite(id) || id <= 0) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return [];
   }
 
@@ -3979,29 +3979,45 @@ async function fetchFixtureStatistics(fixtureId) {
     return fixtureStatsCache.get(id);
   }
 
-  
-const url = BACKEND + "/api/football?fixture=" + id + "&path=%2Ffixtures%2Fstatistics&half=true";
-  
+  const request = (async () => {
+    const url = BACKEND +
+      "/api/football?fixture=" + id +
+      "&path=%2Ffixtures%2Fstatistics&half=true";
 
-  const response = await fetch(url, {
-    cache: "no-store"
-  });
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
 
-  if (!response.ok) {
-    throw new Error(
-      `Errore statistiche fixture ${response.status}`
-    );
+    if (!response.ok) {
+      throw new Error("Statistiche HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (Object.keys(data.errors || {}).length) {
+      throw new Error("Errore API statistiche");
+    }
+
+    const rows = Array.isArray(data.response)
+      ? data.response : [];
+
+    return rows;
+  })();
+
+  fixtureStatsCache.set(id, request);
+
+  try {
+    const rows = await request;
+
+    if (rows.length < 2) {
+      fixtureStatsCache.delete(id);
+    }
+
+    return rows;
+  } catch (error) {
+    fixtureStatsCache.delete(id);
+    throw error;
   }
-
-  const data = await response.json();
-
-  const statistics = Array.isArray(data.response)
-    ? data.response
-    : [];
-
-  fixtureStatsCache.set(id, statistics);
-
-  return statistics;
 }
 // ==========================================
 // V6 CORNER & CARDS - DATI GIOCATORI
