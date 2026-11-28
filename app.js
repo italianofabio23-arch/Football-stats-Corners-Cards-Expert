@@ -454,11 +454,27 @@ function refreshAnomalyCaches() {
   anomalyCacheRefreshAt = now;
 }
 
+let v6SearchMetrics = null;
+
+const fetch = (...args) => {
+  if (v6SearchMetrics) {
+    v6SearchMetrics.requests++;
+  }
+  return window.fetch(...args);
+};
+
 searchBtn.addEventListener("click", async () => {
+  const metrics = {
+    startedAt: performance.now(),
+    requests: 0
+  };
+
+  v6SearchMetrics = metrics;
   showLoading();
-  refreshAnomalyCaches();
 
   try {
+    refreshAnomalyCaches();
+
     const selectedLeagues = getSelectedLeagues();
 
     if (!selectedLeagues.length) {
@@ -468,47 +484,32 @@ searchBtn.addEventListener("click", async () => {
 
     const games = await fetchAllFixtures();
     const filteredGames = filterSelectedLeagues(games);
-    
-    // V6 CORNER - Diagnostica nuovi campionati
-    const nuoviPaesi = [
-      "norway", "sweden", "czech",
-      "denmark", "belgium"
-    ];
 
-    const trovate = games.filter(game => {
-      const paese = String(
-        game.league?.country ||
-        game.competition?.country?.name ||
-        game.country?.name || ""
-      ).toLowerCase();
-
-      return nuoviPaesi.some(p => paese.includes(p));
+    console.log("DIAGNOSI V6 CORNER", {
+      ricevute: games.length,
+      filtrate: filteredGames.length
     });
 
-    alert(
-      "DIAGNOSI V6 CORNER\n" +
-      "Partite ricevute API: " + games.length + "\n" +
-      "Partite dei 5 paesi: " + trovate.length + "\n" +
-      "Partite dopo filtro: " + filteredGames.length + "\n\n" +
-      trovate.slice(0, 5).map(g =>
-        (g.league?.country || "?") + " - " +
-        (g.league?.name || "?") +
-        " - ID " + (g.league?.id || "?")
-      ).join("\n")
-    );
-    
     const normalizedMatches = normalizeFixtures(filteredGames);
 
     await renderMatches(normalizedMatches);
 
   } catch (error) {
     console.error("Errore ricerca partite:", error);
-
     showError(
       error?.message || "Errore durante il caricamento delle partite."
     );
 
   } finally {
+    const seconds = (
+      (performance.now() - metrics.startedAt) / 1000
+    ).toFixed(1);
+
+    resultsInfo.textContent +=
+      " | API backend: " + metrics.requests +
+      " | Tempo: " + seconds + " s";
+
+    v6SearchMetrics = null;
     stopLoading();
   }
 });
