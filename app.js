@@ -5109,46 +5109,67 @@ async function buildH2HAnomalySamples(homeId, awayId) {
 }
   async function fetchRecentTeamFixtures(teamId, last = 6) {
   const id = Number(teamId);
-  const limit = Math.max(1, Math.min(24, Number(last) || 6));
+  const limit = Math.max(1, Math.min(24, Math.floor(Number(last) || 6)));
 
-  if (!Number.isFinite(id) || id <= 0) {
+  if (!Number.isSafeInteger(id) || id <= 0) {
     return [];
   }
 
   const cacheKey = id + "-" + limit;
+  const cached = recentFixturesCache.get(cacheKey);
 
-  if (recentFixturesCache.has(cacheKey)) {
-    return recentFixturesCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.request;
   }
 
-  const url =
-    `${BACKEND}/api/football?path=/fixtures&team=${id}&last=${limit}&status=FT`;
+  const entry = { expiresAt: Infinity };
 
-  const response = await fetch(url, {
-    cache: "no-store"
-  });
+  entry.request = (async () => {
+    const url = BACKEND +
+      "/api/football?path=/fixtures&team=" + id +
+      "&last=" + limit + "&status=FT";
 
-  if (!response.ok) {
-    throw new Error(
-      `Errore ultime partite squadra ${response.status}`
-    );
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Storico squadra HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (Object.keys(data.errors || {}).length) {
+      throw new Error("Errore API storico squadra");
+    }
+
+    return Array.isArray(data.response)
+      ? data.response
+          .filter(g => g?.fixture?.status?.short === "FT")
+          .sort((a, b) =>
+            Number(b.fixture.timestamp) -
+            Number(a.fixture.timestamp)
+          )
+      : [];
+  })();
+
+  recentFixturesCache.set(cacheKey, entry);
+
+  try {
+    const fixtures = await entry.request;
+
+    if (fixtures.length === 0) {
+      recentFixturesCache.delete(cacheKey);
+    } else {
+      entry.expiresAt = Date.now() + 10 * 60 * 1000;
+    }
+
+    return fixtures;
+  } catch (error) {
+    recentFixturesCache.delete(cacheKey);
+    throw error;
   }
-
-  const data = await response.json();
-
-  const fixtures = Array.isArray(data.response)
-  ? data.response
-      .filter(game => game?.fixture?.status?.short === "FT")
-      .sort((a, b) =>
-        Number(b.fixture.timestamp) -
-        Number(a.fixture.timestamp)
-      )
-  : [];
-
-  recentFixturesCache.set(cacheKey, fixtures);
-
-  return fixtures;
-}
+  }
 function averageValues(values) {
   const valid = values.filter((value) =>
     Number.isFinite(Number(value))
