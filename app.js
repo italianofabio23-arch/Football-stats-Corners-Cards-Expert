@@ -1976,34 +1976,11 @@ matches.forEach((match) => {
 });
   // Aggiorna automaticamente gli esiti dello storico
 
-updatePredictionHistoryResults()
-  .then(() => {
-    const summaryCard = Array.from(
-      resultsContainer.querySelectorAll(".match-card")
-    ).find((card) =>
-      card.textContent.includes(
-        "V6 EXPERT - CONTROLLO AFFIDABILITA'"
-      )
-    );
-
-    if (!summaryCard) return;
-
-    const refreshedHTML =
-      renderCornerCardModerateSlip(matches);
-
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = refreshedHTML.trim();
-
-    const refreshedCard =
-      wrapper.querySelector(".match-card");
-
-    if (refreshedCard) {
-      summaryCard.replaceWith(refreshedCard);
-    }
-  })
-  .catch((error) => {
-    console.warn("Aggiornamento storico:", error);
-  });
+try {
+  await updatePredictionHistoryResults();
+} catch (error) {
+  console.warn("Aggiornamento storico:", error);
+}
   
   matchesCount.textContent =
     `${matches.length} ${matches.length === 1 ? "partita" : "partite"}`;
