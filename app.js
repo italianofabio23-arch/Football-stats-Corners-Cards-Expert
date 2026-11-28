@@ -3270,6 +3270,43 @@ if (picks.length < 5) {
           ' | Salvati ora: ' + d.saved +
           ' | Pre-match verificati: ' + d.verified +
           ' | Primo problema: ' + (d.firstIssue || 'nessuno');
+                  const history = loadPredictionHistory();
+        const verified = history.filter(x =>
+          x.status === 'settled' &&
+          x.source !== 'historical-backfill' &&
+          typeof x.won === 'boolean' &&
+          Date.parse(x.createdAt) < Date.parse(x.date)
+        );
+
+        const distinct = new Set(verified.map(x =>
+          String(x.fixtureId || [x.date,x.home,x.away].join('|'))
+        )).size;
+
+        const pending = history.filter(x =>
+          x.status === 'pending'
+        );
+
+        const due = pending.filter(x =>
+          Date.now() >= Date.parse(x.date) + 10800000
+        ).length;
+
+        const counts = [
+          ['Mercati pre-match verificati:', verified.length],
+          ['Partite distinte verificate:', distinct],
+          ['Mercati in attesa di risultato:', pending.length],
+          ['Mercati da controllare (inizio previsto da oltre 3 ore):', due]
+        ];
+
+        const card = btn.closest('.match-card');
+
+        for (const p of card.querySelectorAll('p')) {
+          for (const [label, n] of counts) {
+            const i = p.textContent.indexOf(label);
+            if (i >= 0) {
+              p.textContent = p.textContent.slice(0, i) + label + ' ' + n;
+            }
+          }
+        }
       } catch (e) {
         out.textContent = 'Errore: ' + e.message;
       } finally {
