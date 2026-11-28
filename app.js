@@ -322,15 +322,40 @@ if (!["FT", "AET", "PEN"].includes(status)) {
 
 
 
-const rows =
-  fixture._v6HistoryStats ||
-  await fetchFixtureStatistics(item.fixtureId);
+const statsKey = "stats:" + cacheKey;
+
+if (!fixtureCache.has(statsKey)) {
+  const request = (async () => {
+    const url = BACKEND +
+      "/api/football?path=%2Ffixtures%2Fstatistics" +
+      "&fixture=" + encodeURIComponent(cacheKey);
+
+    const response = await fetch(url, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Statistiche FT HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (Object.keys(data.errors || {}).length > 0) {
+      throw new Error("Errore API statistiche FT");
+    }
+
+    return Array.isArray(data.response)
+      ? data.response : [];
+  })();
+
+  fixtureCache.set(statsKey, request);
+}
+
+const rows = await fixtureCache.get(statsKey);
 
 if (!Array.isArray(rows) || rows.length < 2) {
   continue;
 }
-
-fixture._v6HistoryStats = rows;
     
       
 
